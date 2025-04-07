@@ -1,0 +1,269 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    /* Role Selection Page Specific Styles */
+    .role-selection-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #4B4ACF, #40E0D0);
+        padding: 3rem 0;
+    }
+    
+    .role-selection-content {
+        width: 100%;
+        max-width: 1200px;
+        text-align: center;
+    }
+    
+    .role-selection-title {
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .role-selection-subtitle {
+        color: white;
+        font-size: 1.2rem;
+        max-width: 800px;
+        margin: 0 auto 3rem;
+        opacity: 0.9;
+    }
+    
+    .role-cards {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2rem;
+    }
+    
+    .role-card {
+        width: 300px;
+        height: 400px;
+        perspective: 1000px;
+        cursor: pointer;
+    }
+    
+    .role-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+    }
+    
+    .role-card:hover .role-card-inner {
+        transform: rotateY(180deg);
+    }
+    
+    .role-card-front, .role-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 20px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .role-card-front {
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .role-card-back {
+        background: white;
+        transform: rotateY(180deg);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        color: var(--primary);
+        text-align: left;
+    }
+    
+    .role-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        color: white;
+    }
+    
+    .role-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+    
+    .role-description {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .role-features {
+        list-style-type: none;
+        padding: 0;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+    
+    .role-features li {
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .role-features li:before {
+        content: "✓";
+        color: var(--secondary);
+        margin-right: 0.5rem;
+        font-weight: bold;
+    }
+    
+    .select-role-btn {
+        margin-top: auto;
+        padding: 0.8rem 1.5rem;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .select-role-btn:hover {
+        background-color: #3f3eb8;
+        transform: translateY(-3px);
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .role-cards {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .role-selection-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="role-selection-container">
+    <div class="role-selection-content">
+        <h1 class="role-selection-title">Choose Your Path</h1>
+        <p class="role-selection-subtitle">Select the role that best describes how you want to use Crewd. Don't worry, you can always change your role later.</p>
+        
+        <div class="role-cards">
+            <!-- Applicant Card -->
+            <div class="role-card">
+                <div class="role-card-inner">
+                    <div class="role-card-front">
+                        <div class="role-icon">👤</div>
+                        <h2 class="role-title">Applicant</h2>
+                        <p class="role-description">Looking to join exciting projects and showcase your skills</p>
+                    </div>
+                    <div class="role-card-back">
+                        <h2 style="margin-bottom: 1.5rem;">Applicant Journey</h2>
+                        <ul class="role-features">
+                            <li>Browse available projects</li>
+                            <li>Apply with your profile and skills</li>
+                            <li>Communicate with team leaders</li>
+                            <li>Build your portfolio with completed projects</li>
+                            <li>Showcase your expertise to potential collaborators</li>
+                        </ul>
+                        <form method="POST" action="{{ url_for('role_selection') }}">
+                            <input type="hidden" name="role" value="applicant">
+                            <button type="submit" class="select-role-btn">Select Applicant</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Leader Card -->
+            <div class="role-card">
+                <div class="role-card-inner">
+                    <div class="role-card-front">
+                        <div class="role-icon">👑</div>
+                        <h2 class="role-title">Team Leader</h2>
+                        <p class="role-description">Create projects and build teams to bring your ideas to life</p>
+                    </div>
+                    <div class="role-card-back">
+                        <h2 style="margin-bottom: 1.5rem;">Team Leader Dashboard</h2>
+                        <ul class="role-features">
+                            <li>Create and manage projects</li>
+                            <li>Define required skills and team size</li>
+                            <li>Review applications from talented individuals</li>
+                            <li>Build your perfect team</li>
+                            <li>Track project progress and milestones</li>
+                        </ul>
+                        <form method="POST" action="{{ url_for('role_selection') }}">
+                            <input type="hidden" name="role" value="leader">
+                            <button type="submit" class="select-role-btn">Select Team Leader</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Company Card -->
+            <div class="role-card">
+                <div class="role-card-inner">
+                    <div class="role-card-front">
+                        <div class="role-icon">🏢</div>
+                        <h2 class="role-title">Company</h2>
+                        <p class="role-description">Find talent for your business projects and initiatives</p>
+                    </div>
+                    <div class="role-card-back">
+                        <h2 style="margin-bottom: 1.5rem;">Company Portal</h2>
+                        <ul class="role-features">
+                            <li>Create multiple projects and initiatives</li>
+                            <li>Access a wide talent pool of skilled professionals</li>
+                            <li>Manage applications across all your projects</li>
+                            <li>Track team performance and achievements</li>
+                            <li>Build a company profile to attract top talent</li>
+                        </ul>
+                        <form method="POST" action="{{ url_for('role_selection') }}">
+                            <input type="hidden" name="role" value="company">
+                            <button type="submit" class="select-role-btn">Select Company</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation for cards
+        const roleCards = document.querySelectorAll('.role-card');
+        
+        roleCards.forEach((card, index) => {
+            // Staggered animation for cards
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 200);
+            
+            // Add click listener to flip card when clicked
+            card.addEventListener('click', function() {
+                this.querySelector('.role-card-inner').style.transform = 
+                    this.querySelector('.role-card-inner').style.transform === 'rotateY(180deg)' 
+                    ? 'rotateY(0deg)' 
+                    : 'rotateY(180deg)';
+            });
+        });
+    });
+</script>
+{% endblock %}
