@@ -13,7 +13,7 @@ import os
 
 from .models import (
     Project, Application, Invitation, Group, GroupMembership, 
-    ProjectMembership, Message, TechStackAnalysis, TECH_CHOICES
+    ProjectMembership, Message, TECH_CHOICES
 )
 from .forms import ProjectForm, ApplicationForm, InvitationResponseForm, MessageForm
 

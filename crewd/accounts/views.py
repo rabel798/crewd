@@ -43,9 +43,7 @@ class LoginView(FormView):
             if user is not None:
                 login(request, user)
                 messages.success(request, 'Login successful!')
-                if not user.role:
-                    return redirect('accounts:role_selection')
-                return redirect('projects:dashboard')
+                return redirect('accounts:role_selection')
             else:
                 messages.error(request, 'Invalid email or password combination')
         
@@ -101,7 +99,12 @@ class RoleSelectionView(LoginRequiredMixin, TemplateView):
         if role in ['applicant', 'leader', 'company']:
             request.user.role = role
             request.user.save()
-            return redirect('dashboard')
+            if role == 'applicant':
+                return redirect('projects:dashboard_applicant')
+            elif role == 'leader':
+                return redirect('projects:dashboard_leader')
+            elif role == 'company':
+                return redirect('projects:dashboard')
         messages.error(request, 'Invalid role selected')
         return self.get(request, *args, **kwargs)
 
