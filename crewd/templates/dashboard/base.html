@@ -476,20 +476,59 @@
         <ul class="sidebar-menu">
             <nav class="nav-sidebar">
                 {% if user.role == 'applicant' %}
+                    <li class="sidebar-menu-title">Navigation</li>
                     <li><a href="{% url 'projects:dashboard_applicant' %}" class="nav-item">Dashboard</a></li>
                     <li><a href="{% url 'projects:dashboard_switch_role' %}" class="nav-item">Switch to Team Leader</a></li>
-                    <li><a href="{% url 'projects:contributors_list' %}" class="nav-item">Contributors and Projects</a></li>
-                    <li><a href="{% url 'projects:invitations_list' %}" class="nav-item">Project Invites</a></li>
-                    <li><a href="{% url 'projects:my_contributions' %}" class="nav-item">My Contributions</a></li>
+                    
+                    <li class="sidebar-menu-title">Explore</li>
+                    <li><a href="{% url 'projects:contributors_list' %}" class="nav-item">
+                        Contributors and Projects
+                        {% if matching_projects_count > 0 %}
+                            <span class="badge bg-success ms-2">{{ matching_projects_count }} matches</span>
+                        {% endif %}
+                    </a></li>
+                    
+                    <li class="sidebar-menu-title">My Activity</li>
+                    <li><a href="{% url 'projects:invitations_list' %}" class="nav-item">
+                        Project Invites
+                        {% if pending_invitations_count > 0 %}
+                            <span class="badge bg-primary ms-2">{{ pending_invitations_count }} new</span>
+                        {% endif %}
+                    </a></li>
+                    <li><a href="{% url 'projects:my_contributions' %}" class="nav-item">
+                        My Contributions
+                        <span class="badge bg-success ms-2">Active</span>
+                    </a></li>
                     <li><a href="{% url 'projects:groups_list' %}" class="nav-item">Groups</a></li>
                 {% elif user.role == 'leader' %}
+                    <li class="sidebar-menu-title">Navigation</li>
                     <li><a href="{% url 'projects:dashboard_leader' %}" class="nav-item">Dashboard</a></li>
                     <li><a href="{% url 'projects:dashboard_switch_role' %}" class="nav-item">Switch to Applicant</a></li>
+                    
+                    <li class="sidebar-menu-title">Projects</li>
                     <li><a href="{% url 'projects:my_projects' %}" class="nav-item">My Projects</a></li>
-                    <li><a href="{% url 'projects:create_project' %}" class="nav-item">Add New Project</a></li>
-                    <li><a href="{% url 'projects:applications_list' %}" class="nav-item">Team Requests</a></li>
-                    <li><a href="{% url 'projects:sent_invitations' %}" class="nav-item">Sent Invites</a></li>
-                    <li><a href="{% url 'projects:groups_list' %}" class="nav-item">Groups</a></li>
+                    <li><a href="{% url 'projects:create_project' %}" class="nav-item">
+                        Add New Project
+                        <i class="fas fa-magic ms-2" title="Uses Grok API for tech stack analysis"></i>
+                    </a></li>
+                    
+                    <li class="sidebar-menu-title">Team Management</li>
+                    <li><a href="{% url 'projects:applications_list' %}" class="nav-item">
+                        Team Requests
+                        {% if pending_applications_count > 0 %}
+                            <span class="badge bg-primary ms-2">{{ pending_applications_count }} pending</span>
+                        {% endif %}
+                    </a></li>
+                    <li><a href="{% url 'projects:sent_invitations' %}" class="nav-item">
+                        Sent Invites
+                        {% if pending_sent_invitations_count > 0 %}
+                            <span class="badge bg-info ms-2">{{ pending_sent_invitations_count }} waiting</span>
+                        {% endif %}
+                    </a></li>
+                    <li><a href="{% url 'projects:groups_list' %}" class="nav-item">
+                        Groups
+                        <i class="fas fa-users ms-2" title="Manage project teams"></i>
+                    </a></li>
                 {% endif %}
             </nav>
 
