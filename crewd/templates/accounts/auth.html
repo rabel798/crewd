@@ -8,14 +8,14 @@
     <div style="text-align: center; margin-bottom: 3rem;">
         <img src="/static/img/logo.jpg" alt="Crewd Logo" style="width: 120px; height: auto;">
     </div>
-    
+
     <div id="authContainer">
         <div class="glass-card" style="max-width: 500px; margin: 0 auto; padding: 30px;">
             <div class="auth-tabs">
                 <div id="loginTab" class="auth-tab active">Sign In</div>
                 <div id="registerTab" class="auth-tab">Create Account</div>
             </div>
-            
+
             <!-- Login Form -->
             <form id="loginForm" method="post" action="{% url 'accounts:login' %}" class="auth-form">
                 {% csrf_token %}
@@ -35,7 +35,7 @@
                 </div>
                 <button type="submit" class="btn" style="width: 100%;">Sign In</button>
             </form>
-            
+
             <!-- Registration Form (initially hidden) -->
             <form id="registerForm" method="post" action="{% url 'accounts:register' %}" class="auth-form" style="display: none;" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -71,17 +71,39 @@
                     <label for="id_profile_picture">Profile Picture (optional):</label>
                     {{ register_form.profile_picture }}
                 </div>
-                <div class="form-group">
-                    <label>Tech Stack (optional):</label>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                <div class="tech-stack-container">
+                    <label>Tech Stack</label>
+                    <select multiple name="tech_stack" class="form-control tech-select" id="techStack">
                         {% for tech in tech_choices %}
-                        <div>
-                            <input type="checkbox" name="tech_stack" id="tech_{{ tech }}" value="{{ tech }}">
-                            <label for="tech_{{ tech }}">{{ tech }}</label>
-                        </div>
+                            <option value="{{ tech }}">{{ tech }}</option>
                         {% endfor %}
+                    </select>
+                    <div style="margin-top: 10px;">
+                        <input type="text" id="customSkill" class="form-control" placeholder="Add custom skill">
+                        <button type="button" onclick="addCustomSkill()" class="btn btn-outline" style="margin-top: 5px;">Add Skill</button>
                     </div>
                 </div>
+                <script>
+                    function addCustomSkill() {
+                        const customSkill = document.getElementById('customSkill').value.trim();
+                        if (customSkill) {
+                            const select = document.getElementById('techStack');
+                            const option = new Option(customSkill, customSkill);
+                            select.add(option);
+                            option.selected = true;
+                            document.getElementById('customSkill').value = '';
+                        }
+                    }
+                </script>
+                <style>
+                    .tech-select {
+                        height: auto;
+                        min-height: 100px;
+                    }
+                    .tech-select option {
+                        padding: 5px;
+                    }
+                </style>
                 <button type="submit" class="btn" style="width: 100%;">Create Account</button>
             </form>
         </div>
@@ -96,7 +118,7 @@
         const registerTab = document.getElementById('registerTab');
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
-        
+
         // Tab switching functionality
         loginTab.addEventListener('click', function() {
             loginTab.classList.add('active');
@@ -104,14 +126,14 @@
             loginForm.style.display = 'block';
             registerForm.style.display = 'none';
         });
-        
+
         registerTab.addEventListener('click', function() {
             registerTab.classList.add('active');
             loginTab.classList.remove('active');
             registerForm.style.display = 'block';
             loginForm.style.display = 'none';
         });
-        
+
         // Check URL to determine which tab to show initially
         const url = window.location.href;
         if (url.includes('register')) {
