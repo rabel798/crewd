@@ -1,356 +1,126 @@
-{% extends 'base.html' %}
-{% load static %}
 
-{% block extra_css %}
-<style>
-    /* Hero section */
-    .hero {
-        position: relative;
-        height: 100vh;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
-        color: white;
-        overflow: hidden;
-    }
-    
-    .hero-content {
-        position: relative;
-        z-index: 3;
-        text-align: center;
-        max-width: 800px;
-        padding: 0 20px;
-    }
-    
-    .hero h1 {
-        font-size: 3.5rem;
-        font-weight: 800;
-        margin-bottom: 1.5rem;
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 1s ease forwards 0.5s;
-    }
-    
-    .hero p {
-        font-size: 1.25rem;
-        margin-bottom: 2rem;
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 1s ease forwards 0.7s;
-    }
-    
-    .cta-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 1s ease forwards 0.9s;
-    }
-    
-    .cta-button {
-        display: inline-block;
-        background-color: white;
-        color: #4B4ACF;
-        font-weight: 600;
-        padding: 15px 30px;
-        border-radius: 30px;
-        text-decoration: none;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .cta-button-outline {
-        background-color: transparent;
-        color: white;
-        border: 2px solid white;
-    }
-    
-    .cta-button:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
-    
-    /* Floating cards */
-    .floating-cards {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        z-index: 2;
-    }
-    
-    .card {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        display: flex;
-        align-items: center;
-        opacity: 0;
-        animation: floatIn 1s ease forwards, float 3s ease-in-out infinite;
-    }
-    
-    .card img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-right: 10px;
-        object-fit: cover;
-    }
-    
-    .card-content {
-        text-align: left;
-    }
-    
-    .card-content h3 {
-        font-size: 14px;
-        margin-bottom: 3px;
-    }
-    
-    .card-content p {
-        font-size: 12px;
-        margin: 0;
-    }
-    
-    .card:nth-child(1) {
-        top: 20%;
-        left: 15%;
-        animation-delay: 1.2s, 2s;
-    }
-    
-    .card:nth-child(2) {
-        top: 60%;
-        left: 20%;
-        animation-delay: 1.5s, 2.5s;
-    }
-    
-    .card:nth-child(3) {
-        top: 10%;
-        right: 15%;
-        animation-delay: 1.8s, 3s;
-    }
-    
-    .card:nth-child(4) {
-        top: 70%;
-        right: 20%;
-        animation-delay: 2.1s, 3.5s;
-    }
-    
-    /* Particles */
-    #particles-js {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        z-index: 1;
-    }
-    
-    /* Animations */
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes floatIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes float {
-        0%, 100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-10px);
-        }
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-        .hero h1 {
-            font-size: 2.5rem;
-        }
-        
-        .hero p {
-            font-size: 1rem;
-        }
-        
-        .card:nth-child(1), .card:nth-child(3) {
-            display: none;
-        }
-        
-        .card:nth-child(2) {
-            left: 10%;
-        }
-        
-        .card:nth-child(4) {
-            right: 10%;
-        }
-        
-        .cta-buttons {
-            flex-direction: column;
-            align-items: center;
-        }
-    }
-</style>
-{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Crewd - Connect. Collaborate. Create.{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div id="particles-js"></div>
-    
-    <div class="hero-content">
-        <h1>"Your Talent is Not the Problem.<br>Your Team is."</h1>
-        <p>Crewd fixes that. Efficiently. Beautifully. Brutally</p>
-        <div class="cta-buttons">
-            <a href="{% url 'accounts:login' %}" class="cta-button">Log In</a>
-            <a href="{% url 'accounts:register' %}" class="cta-button cta-button-outline">Sign Up</a>
-        </div>
+<div class="text-center" style="padding: 4rem 0;">
+    <div style="text-align: center; margin-bottom: 3rem;">
+        <img src="/static/img/logo.png" alt="Crewd Logo" class="floating-logo" style="width: 200px; height: auto;">
     </div>
-    
-    <div class="floating-cards">
-        <div class="card">
-            <img src="{% static 'img/default-avatar.svg' %}" alt="Profile">
-            <div class="card-content">
-                <h3>Sarah Johnson</h3>
-                <p>UX Designer • 98% match</p>
-            </div>
-        </div>
-        
-        <div class="card">
-            <img src="{% static 'img/default-avatar.svg' %}" alt="Profile">
-            <div class="card-content">
-                <h3>Michael Chen</h3>
-                <p>Full Stack Developer • 95% match</p>
-            </div>
-        </div>
-        
-        <div class="card">
-            <img src="{% static 'img/default-avatar.svg' %}" alt="Profile">
-            <div class="card-content">
-                <h3>Alex Rodriguez</h3>
-                <p>Product Manager • 97% match</p>
-            </div>
-        </div>
-        
-        <div class="card">
-            <img src="{% static 'img/default-avatar.svg' %}" alt="Profile">
-            <div class="card-content">
-                <h3>Jamie Taylor</h3>
-                <p>Data Scientist • 96% match</p>
-            </div>
-        </div>
-    </div>
-</section>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+    .floating-logo {
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        animation: float 6s ease-in-out infinite, glow 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    @keyframes glow {
+        0%, 100% { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(75, 74, 207, 0.4)); }
+        50% { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 25px rgba(75, 74, 207, 0.6)); }
+    }
+    </style>
+    
+    <h1 class="welcome-headline" style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(to right, #4B4ACF, #40E0D0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center;">Welcome to Crewd</h1>
+    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto; text-align: center;">Building teams that transform ideas into reality.</p>
+
+    <section class="roles-section" style="padding: 50px 20px;">
+        <div class="roles-container" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+            <!-- Applicant Card -->
+            <div class="role-card glass-card" style="width: 350px; height: 400px; perspective: 1000px; cursor: pointer;">
+                <div class="role-card-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
+                    <div class="role-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; text-align: center; padding: 30px;">
+                        <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Applicants</h3>
+                        <p>Discover opportunities that match your skills and join exciting projects.</p>
+                        <p style="margin-top: 20px; font-style: italic;">(Hover to see more)</p>
+                    </div>
+                    <div class="role-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, #4B4ACF, #40E0D0); color: white; padding: 30px;">
+                        <ul style="list-style: none; margin-bottom: 20px;">
+                            <li style="margin-bottom: 10px;">✓ Find matching projects</li>
+                            <li style="margin-bottom: 10px;">✓ Showcase your skills</li>
+                            <li style="margin-bottom: 10px;">✓ Connect with teams</li>
+                            <li style="margin-bottom: 10px;">✓ Build your portfolio</li>
+                        </ul>
+                        <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #4B4ACF;">Join Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Leader Card -->
+            <div class="role-card glass-card" style="width: 350px; height: 400px; perspective: 1000px; cursor: pointer;">
+                <div class="role-card-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
+                    <div class="role-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; text-align: center; padding: 30px;">
+                        <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Team Leaders</h3>
+                        <p>Create projects and find the perfect team members.</p>
+                        <p style="margin-top: 20px; font-style: italic;">(Hover to see more)</p>
+                    </div>
+                    <div class="role-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, #4B4ACF, #40E0D0); color: white; padding: 30px;">
+                        <ul style="list-style: none; margin-bottom: 20px;">
+                            <li style="margin-bottom: 10px;">✓ Post project opportunities</li>
+                            <li style="margin-bottom: 10px;">✓ Review applications</li>
+                            <li style="margin-bottom: 10px;">✓ Build dream teams</li>
+                            <li style="margin-bottom: 10px;">✓ Manage projects</li>
+                        </ul>
+                        <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #4B4ACF;">Start Leading</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Card -->
+            <div class="role-card glass-card" style="width: 350px; height: 400px; perspective: 1000px; cursor: pointer;">
+                <div class="role-card-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
+                    <div class="role-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; text-align: center; padding: 30px;">
+                        <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Companies</h3>
+                        <p>Find skilled teams and manage company initiatives.</p>
+                        <p style="margin-top: 20px; font-style: italic;">(Hover to see more)</p>
+                    </div>
+                    <div class="role-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, #4B4ACF, #40E0D0); color: white; padding: 30px;">
+                        <ul style="list-style: none; margin-bottom: 20px;">
+                            <li style="margin-bottom: 10px;">✓ Talent acquisition</li>
+                            <li style="margin-bottom: 10px;">✓ Project management</li>
+                            <li style="margin-bottom: 10px;">✓ Team analytics</li>
+                            <li style="margin-bottom: 10px;">✓ Resource planning</li>
+                        </ul>
+                        <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #4B4ACF;">Get Started</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.role-card:hover .role-card-inner {
+    transform: rotateY(180deg);
+}
+
+@media (max-width: 768px) {
+    .role-card {
+        width: 100%;
+        max-width: 350px;
+        margin-bottom: 20px;
+    }
+}
+</style>
+
 <script>
-    // Initialize particles.js
-    document.addEventListener('DOMContentLoaded', function() {
-        particlesJS('particles-js', {
-            "particles": {
-                "number": {
-                    "value": 80,
-                    "density": {
-                        "enable": true,
-                        "value_area": 800
-                    }
-                },
-                "color": {
-                    "value": "#ffffff"
-                },
-                "shape": {
-                    "type": "circle",
-                    "stroke": {
-                        "width": 0,
-                        "color": "#000000"
-                    },
-                },
-                "opacity": {
-                    "value": 0.5,
-                    "random": false,
-                    "anim": {
-                        "enable": false,
-                        "speed": 1,
-                        "opacity_min": 0.1,
-                        "sync": false
-                    }
-                },
-                "size": {
-                    "value": 3,
-                    "random": true,
-                    "anim": {
-                        "enable": false,
-                        "speed": 40,
-                        "size_min": 0.1,
-                        "sync": false
-                    }
-                },
-                "line_linked": {
-                    "enable": true,
-                    "distance": 150,
-                    "color": "#ffffff",
-                    "opacity": 0.4,
-                    "width": 1
-                },
-                "move": {
-                    "enable": true,
-                    "speed": 2,
-                    "direction": "none",
-                    "random": false,
-                    "straight": false,
-                    "out_mode": "out",
-                    "bounce": false,
-                    "attract": {
-                        "enable": false,
-                        "rotateX": 600,
-                        "rotateY": 1200
-                    }
-                }
-            },
-            "interactivity": {
-                "detect_on": "canvas",
-                "events": {
-                    "onhover": {
-                        "enable": true,
-                        "mode": "grab"
-                    },
-                    "onclick": {
-                        "enable": true,
-                        "mode": "push"
-                    },
-                    "resize": true
-                },
-                "modes": {
-                    "grab": {
-                        "distance": 140,
-                        "line_linked": {
-                            "opacity": 1
-                        }
-                    },
-                    "push": {
-                        "particles_nb": 4
-                    }
-                }
-            },
-            "retina_detect": true
+document.addEventListener('DOMContentLoaded', function() {
+    const roleCards = document.querySelectorAll('.role-card');
+    
+    roleCards.forEach(card => {
+        card.addEventListener('touchstart', function() {
+            const cardInner = this.querySelector('.role-card-inner');
+            cardInner.style.transform = 
+                cardInner.style.transform === 'rotateY(180deg)' 
+                    ? 'rotateY(0deg)' 
+                    : 'rotateY(180deg)';
         });
     });
+});
 </script>
 {% endblock %}

@@ -4,14 +4,12 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
-    "crispy-bootstrap4>=2024.10",
     "django>=5.2",
     "django-crispy-forms>=2.3",
     "flask>=3.1.0",
     "flask-login>=0.6.3",
     "flask-sqlalchemy>=3.1.1",
     "flask-wtf>=1.2.2",
-    "openai>=1.71.0",
     "pillow>=11.1.0",
     "psycopg2-binary>=2.9.10",
     "requests>=2.32.3",

@@ -2,166 +2,103 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 
+User = settings.AUTH_USER_MODEL
 
 class Project(models.Model):
-    """Project model for team leaders to create projects"""
+    """Model for projects"""
     title = models.CharField(max_length=100)
     description = models.TextField()
-    required_skills = models.TextField(blank=True, null=True)  # Comma-separated list of skills
+    required_skills = models.TextField(null=True, blank=True)  # Comma-separated list
     team_size = models.IntegerField()
     duration = models.CharField(max_length=50)
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('active', 'Active'),
-            ('completed', 'Completed'),
-            ('cancelled', 'Cancelled'),
-        ],
-        default='active'
-    )
-    creator = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='projects'
-    )
+    status = models.CharField(max_length=20, choices=[
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ], default='active')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_projects')
+    members = models.ManyToManyField(User, related_name='member_projects', blank=True)
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def get_required_skills_list(self):
-        """Convert comma-separated skills to list"""
+        """Return required skills as a list"""
         if not self.required_skills:
             return []
         return [skill.strip() for skill in self.required_skills.split(',') if skill.strip()]
     
     def __str__(self):
-        return f"{self.title} by {self.creator.username}"
-
-
-class ProjectMembership(models.Model):
-    """Relationship between users and projects"""
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='memberships'
-    )
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name='memberships'
-    )
-    role = models.CharField(
-        max_length=20,
-        choices=[
-            ('admin', 'Admin'),
-            ('member', 'Member'),
-        ],
-        default='member'
-    )
-    joined_at = models.DateTimeField(default=timezone.now)
-    
-    class Meta:
-        unique_together = ('user', 'project')
-    
-    def __str__(self):
-        return f"{self.user.username} as {self.role} in {self.project.title}"
+        return self.title
 
 
 class Application(models.Model):
-    """Application from a user to join a project"""
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name='applications'
-    )
-    applicant = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='applications'
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('pending', 'Pending'),
-            ('accepted', 'Accepted'),
-            ('rejected', 'Rejected'),
-        ],
-        default='pending'
-    )
-    message = models.TextField(blank=True, null=True)
+    """Model for project applications"""
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='applications')
+    applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ], default='pending')
+    message = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         unique_together = ('project', 'applicant')
     
     def __str__(self):
-        return f"Application by {self.applicant.username} for {self.project.title}"
+        return f"{self.applicant} - {self.project}"
 
 
-class Invitation(models.Model):
-    """Invitation from a team leader to a user to join a project"""
-    project = models.ForeignKey(
-        Project,
-        on_delete=models.CASCADE,
-        related_name='invitations'
-    )
-    sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='sent_invitations'
-    )
-    recipient = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='received_invitations'
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('pending', 'Pending'),
-            ('accepted', 'Accepted'),
-            ('rejected', 'Rejected'),
-        ],
-        default='pending'
-    )
-    message = models.TextField(blank=True, null=True)
+class ProjectInvitation(models.Model):
+    """Model for invitations to join projects"""
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='invitations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='invitations')
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ], default='pending')
+    message = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('project', 'recipient')
+        unique_together = ('project', 'user')
     
     def __str__(self):
-        return f"Invitation from {self.sender.username} to {self.recipient.username} for {self.project.title}"
+        return f"{self.project} invitation to {self.user}"
+
+
+class Contribution(models.Model):
+    """Model for tracking user contributions to projects"""
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='contributions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contributions')
+    description = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.user}'s contribution to {self.project}"
 
 
 class Group(models.Model):
-    """Group chat for project members"""
+    """Model for project communication groups"""
     name = models.CharField(max_length=100)
-    project = models.OneToOneField(
-        Project,
-        on_delete=models.CASCADE,
-        related_name='group'
-    )
+    project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name='group')
+    members = models.ManyToManyField(User, related_name='project_groups')
     created_at = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return f"{self.name} for {self.project.title}"
+        return self.name
 
 
-class Message(models.Model):
-    """Message in a group chat"""
-    group = models.ForeignKey(
-        Group,
-        on_delete=models.CASCADE,
-        related_name='messages',
-        null=True,
-        blank=True
-    )
-    sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='sent_messages'
-    )
+class GroupMessage(models.Model):
+    """Model for messages in project groups"""
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     content = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return f"Message by {self.sender.username} in {self.group.name if self.group else 'Direct Message'}"
+        return f"Message from {self.sender} in {self.group}"

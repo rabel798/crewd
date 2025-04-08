@@ -1,77 +1,64 @@
+
 {% extends 'base.html' %}
-{% load static %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="mb-4">Your Profile</h1>
-        </div>
-    </div>
+<div class="container" style="max-width: 800px; margin: 2rem auto;">
+    <h1 class="text-center mb-4">Your Profile</h1>
 
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    {% if user.profile.profile_picture %}
-                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="rounded-circle mb-3" width="150" height="150">
-                    {% else %}
-                    <img src="{% static 'img/default-avatar.svg' %}" alt="{{ user.username }}" class="rounded-circle mb-3" width="150" height="150">
-                    {% endif %}
-                    
-                    <h4>{{ user.username }}</h4>
-                    <p class="text-muted">{{ user.profile.role|title }}</p>
-                    
-                    <hr>
-                    
-                    <div class="mt-3">
-                        <strong>Joined:</strong> {{ user.date_joined|date:"F d, Y" }}
+    <div class="glass-card">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="alert alert-error">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="alert alert-error">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Profile Picture</label>
+                {{ form.profile_picture }}
+                {% if form.profile_picture.errors %}
+                    <div class="alert alert-error">{{ form.profile_picture.errors }}</div>
+                {% endif %}
+                {% if user.profile_picture %}
+                    <div style="margin-top: 10px;">
+                        <img src="{{ user.profile_picture.url }}" alt="Current profile picture" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">
                     </div>
-                </div>
+                {% endif %}
             </div>
-        </div>
 
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h4 class="card-title mb-4">Profile Details</h4>
-                    
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+            <div class="form-group">
+                <label>Tech Stack</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                    {% for tech in tech_choices %}
+                        <div>
+                            <label>
+                                <input type="checkbox" name="tech_stack" value="{{ tech }}"
+                                       {% if tech in user.get_tech_stack_list %}checked{% endif %}>
+                                {{ tech }}
+                            </label>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="{{ user.email }}" readonly>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Tech Stack</label>
-                            <div class="mb-2">
-                                {% for tech in tech_stack %}
-                                <span class="badge bg-light text-dark border mb-1">{{ tech }}</span>
-                                {% empty %}
-                                <span class="text-muted">No tech skills added yet</span>
-                                {% endfor %}
-                            </div>
-                            <a href="#" class="btn btn-sm btn-outline-primary">Edit Tech Stack</a>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Profile Picture</label>
-                            <div class="input-group">
-                                <input type="file" class="form-control" id="profile-picture" name="profile_picture">
-                                <button type="submit" class="btn btn-outline-primary">Update</button>
-                            </div>
-                        </div>
-                    </form>
+                    {% endfor %}
                 </div>
             </div>
-        </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="btn">Update Profile</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

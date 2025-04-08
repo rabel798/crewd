@@ -1,0 +1,345 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Projects - Crewd{% endblock %}
+
+{% block content %}
+<style>
+.projects-container {
+    padding: 3rem 0;
+    background: linear-gradient(135deg, rgba(75, 74, 207, 0.05), rgba(64, 224, 208, 0.05));
+}
+
+.projects-header {
+    text-align: center;
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.projects-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #4B4ACF, #40E0D0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeSlideDown 0.8s ease-out;
+}
+
+.projects-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeSlideUp 0.8s ease-out 0.2s both;
+}
+
+.filter-bar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    animation: fadeIn 0.8s ease-out 0.4s both;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.filter-bar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.15);
+}
+
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: #4B4ACF;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+    transition: color 0.3s;
+}
+
+.filter-control {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    border: 2px solid rgba(75, 74, 207, 0.1);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    background: white;
+    color: #333;
+}
+
+.filter-control:focus {
+    outline: none;
+    border-color: #4B4ACF;
+    box-shadow: 0 0 0 3px rgba(75, 74, 207, 0.1);
+}
+
+.filter-control:hover {
+    border-color: rgba(75, 74, 207, 0.3);
+}
+
+.filter-btn {
+    background: linear-gradient(135deg, #4B4ACF, #40E0D0);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.3s;
+    align-self: flex-end;
+    margin-top: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(75, 74, 207, 0.3);
+}
+
+.filter-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(75, 74, 207, 0.2);
+}
+
+/* Add focus styles for accessibility */
+.filter-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(75, 74, 207, 0.3);
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
+    animation: fadeIn 0.8s ease-out 0.6s both;
+}
+
+.project-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+    animation: fadeSlideUp 0.8s ease-out;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.project-header {
+    background: linear-gradient(135deg, #4B4ACF, #40E0D0);
+    padding: 1.5rem;
+    color: white;
+}
+
+.project-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.project-meta {
+    opacity: 0.9;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.project-body {
+    padding: 1.5rem;
+}
+
+.project-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.project-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.skill-tag {
+    background: linear-gradient(135deg, rgba(75, 74, 207, 0.1), rgba(64, 224, 208, 0.1));
+    color: #4B4ACF;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.project-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.project-creator {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.creator-avatar {
+    width: 35px;
+    height: 35px;
+    background: linear-gradient(135deg, #4B4ACF, #40E0D0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.view-btn {
+    background: linear-gradient(135deg, #4B4ACF, #40E0D0);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.view-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(75, 74, 207, 0.2);
+}
+
+@keyframes fadeSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+
+<div class="projects-container">
+    <div class="container">
+        <!-- Projects Header -->
+        <div class="projects-header glass">
+            <h1 class="projects-title">Explore Projects</h1>
+            <p class="projects-subtitle">Browse through all available projects and find the perfect opportunity to showcase your skills or build your dream team.</p>
+        </div>
+        
+        <!-- Search & Filter Bar -->
+        <div class="filter-bar glass-card">
+            <form class="filter-form" method="GET">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" name="search" class="filter-control" placeholder="Search projects..." value="{{ request.GET.search }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Skills</label>
+                    <select name="skill" class="filter-control">
+                        <option value="">All Skills</option>
+                        {% for tech in tech_choices %}
+                            <option value="{{ tech }}" {% if request.GET.skill == tech %}selected{% endif %}>{{ tech }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select name="sort" class="filter-control">
+                        <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest First</option>
+                        <option value="oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="filter-btn">Apply Filters</button>
+            </form>
+        </div>
+        
+        <!-- Projects Grid -->
+        {% if projects %}
+            <div class="projects-grid">
+                {% for project in projects %}
+                    <div class="project-card">
+                        <div class="project-header">
+                            <h2 class="project-title">{{ project.title }}</h2>
+                            <div class="project-meta">
+                                <span>Team Size: {{ project.team_size }}</span>
+                                <span>Duration: {{ project.duration }}</span>
+                            </div>
+                        </div>
+                        <div class="project-body">
+                            <p class="project-description">{{ project.description|truncatechars:150 }}</p>
+                            
+                            <div class="project-skills">
+                                {% for skill in project.required_skills.split %}
+                                    <span class="skill-tag">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="project-footer">
+                                <div class="project-creator">
+                                    <div class="creator-avatar">
+                                        {{ project.creator.username.0|upper }}
+                                    </div>
+                                    <span class="creator-name">{{ project.creator.username }}</span>
+                                </div>
+                                
+                                <a href="{% url 'projects:project_detail' project.id %}" class="view-btn">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <div class="empty-icon">🔍</div>
+                <p class="empty-message">No projects found matching your criteria.</p>
+                <a href="{% url 'projects:project_list' %}" class="btn">Clear Filters</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

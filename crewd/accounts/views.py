@@ -1,85 +1,128 @@
 from django.shortcuts import render, redirect
-from django.views import View
+from django.views.generic import FormView, TemplateView, UpdateView
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.views.generic import FormView
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.conf import settings
 
-from django.contrib.auth.models import User
-from .models import UserProfile
-from .forms import UserRegisterForm, UserProfileForm, UserLoginForm
+from .forms import LoginForm, RegisterForm, ProfileForm
+from .models import User, TECH_CHOICES
 
-
-class RegisterView(FormView):
-    """User registration view"""
-    template_name = 'accounts/register.html'
-    form_class = UserRegisterForm
-    success_url = reverse_lazy('projects:switch_role')
-    
-    def form_valid(self, form):
-        # Create new user
-        user = form.save()
-        
-        # Log the user in
-        username = form.cleaned_data.get('username')
-        password = form.cleaned_data.get('password1')
-        user = authenticate(username=username, password=password)
-        login(self.request, user)
-        
-        messages.success(self.request, f'Account created for {username}! Please select your role.')
-        return super().form_valid(form)
+class LoginView(FormView):
+    """View for user login"""
+    template_name = 'accounts/auth.html'
+    form_class = LoginForm
+    success_url = reverse_lazy('projects:dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['hide_nav'] = True  # Hide navbar for cleaner auth pages
+        context['is_login'] = True
         return context
-
-
-class LoginView(FormView):
-    """User login view"""
-    template_name = 'accounts/login.html'
-    form_class = UserLoginForm
-    success_url = reverse_lazy('projects:switch_role')
     
     def form_valid(self, form):
-        username = form.cleaned_data.get('username')
-        password = form.cleaned_data.get('password')
-        user = authenticate(username=username, password=password)
+        email = form.cleaned_data['username']  # Using username field for email
+        password = form.cleaned_data['password']
+        user = authenticate(self.request, username=email, password=password)
         
         if user is not None:
             login(self.request, user)
-            messages.success(self.request, f'Welcome back, {username}!')
+            messages.success(self.request, f"Welcome back, {user.username}!")
             
-            # Redirect to previous page if available
-            next_page = self.request.GET.get('next')
-            if next_page:
-                return redirect(next_page)
-        
-        return super().form_valid(form)
+            # Redirect based on whether user has selected a role
+            if user.role:
+                return redirect(self.get_success_url())
+            else:
+                return redirect('accounts:role_selection')
+        else:
+            messages.error(self.request, "Invalid email or password.")
+            return self.form_invalid(form)
+
+
+class RegisterView(FormView):
+    """View for user registration"""
+    template_name = 'accounts/auth.html'
+    form_class = RegisterForm
+    success_url = reverse_lazy('accounts:role_selection')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['hide_nav'] = True  # Hide navbar for cleaner auth pages
+        context['is_login'] = False
         return context
+    
+    def form_valid(self, form):
+        user = form.save()
+        
+        # Handle profile picture
+        if 'profile_picture' in self.request.FILES:
+            user.profile_picture = self.request.FILES['profile_picture']
+            user.save()
+            
+        # Authenticate and log in the user
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password1']
+        user = authenticate(self.request, username=email, password=password)
+        
+        if user is not None:
+            login(self.request, user)
+            messages.success(self.request, f"Account created successfully! Welcome, {user.username}!")
+            return redirect(self.success_url)
+        
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "There was an error with your registration. Please check the form and try again.")
+        return super().form_invalid(form)
 
 
-class ProfileView(LoginRequiredMixin, View):
-    """User profile view"""
+class RoleSelectionView(LoginRequiredMixin, TemplateView):
+    """View for selecting user role"""
+    template_name = 'accounts/role_selection.html'
+    
+    def post(self, request, *args, **kwargs):
+        role = request.POST.get('role')
+        
+        if role in ['applicant', 'leader', 'company']:
+            user = request.user
+            user.role = role
+            user.save()
+            
+            messages.success(request, f"Role updated to {role.title()}!")
+            return redirect('projects:dashboard')
+        else:
+            messages.error(request, "Invalid role selection.")
+            return self.get(request, *args, **kwargs)
+
+
+class ProfileView(LoginRequiredMixin, FormView):
+    """View for user profile management"""
     template_name = 'accounts/profile.html'
+    form_class = ProfileForm
+    success_url = reverse_lazy('accounts:profile')
     
-    def get(self, request):
-        user_form = UserProfileForm(instance=request.user.profile)
-        return render(request, self.template_name, {'form': user_form})
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['instance'] = self.request.user
+        return kwargs
     
-    def post(self, request):
-        user_form = UserProfileForm(request.POST, request.FILES, instance=request.user.profile)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tech_choices'] = TECH_CHOICES
+        context['user_tech_stack'] = self.request.user.get_tech_stack_list()
+        return context
+    
+    def form_valid(self, form):
+        user = form.save(commit=False)
         
-        if user_form.is_valid():
-            user_form.save()
-            messages.success(request, 'Your profile has been updated!')
-            return redirect('projects:profile')
+        # Handle tech stack
+        tech_stack = self.request.POST.getlist('tech_stack')
+        if tech_stack:
+            user.tech_stack = ','.join(tech_stack)
         
-        return render(request, self.template_name, {'form': user_form})
+        # Handle profile picture
+        if 'profile_picture' in self.request.FILES:
+            user.profile_picture = self.request.FILES['profile_picture']
+            
+        user.save()
+        messages.success(self.request, "Profile updated successfully!")
+        return super().form_valid(form)
