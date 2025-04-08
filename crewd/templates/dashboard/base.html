@@ -35,7 +35,7 @@
         .sidebar {
             position: fixed;
             top: 0;
-            right: 0;
+            left: 0;
             width: var(--sidebar-width);
             height: 100vh;
             background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
@@ -46,19 +46,12 @@
         }
 
         .sidebar-collapsed {
-            right: calc(-1 * var(--sidebar-width) + 50px);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            left: calc(-1 * var(--sidebar-width) + 50px);
         }
 
         .sidebar-toggle {
             position: fixed;
-            right: var(--sidebar-width);
+            left: var(--sidebar-width);
             top: 20px;
             z-index: 1001;
             width: 40px;
@@ -70,11 +63,11 @@
             justify-content: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            transition: right 0.3s ease;
+            transition: left 0.3s ease;
         }
 
         .sidebar-collapsed .sidebar-toggle {
-            right: 10px;
+            left: 10px;
         }
 
         .sidebar-user {
@@ -147,13 +140,13 @@
 
         /* Main Content */
         .main-content {
-            margin-right: var(--sidebar-width);
+            margin-left: var(--sidebar-width);
             padding: 20px;
             transition: margin 0.3s ease;
         }
 
         .main-content-expanded {
-            margin-right: 50px;
+            margin-left: 50px;
         }
 
         /* Cards and Buttons */
@@ -412,19 +405,19 @@
         /* Responsive Adjustments */
         @media (max-width: 991.98px) {
             .sidebar {
-                right: calc(-1 * var(--sidebar-width));
+                left: calc(-1 * var(--sidebar-width));
             }
 
             .sidebar-toggle {
-                right: 10px;
+                left: 10px;
             }
 
             .main-content {
-                margin-right: 0;
+                margin-left: 0;
             }
 
             .sidebar-visible {
-                right: 0;
+                left: 0;
             }
         }
         .nav-sidebar {
@@ -479,7 +472,7 @@
                     <li class="sidebar-menu-title">Navigation</li>
                     <li><a href="{% url 'projects:dashboard_applicant' %}" class="nav-item">Dashboard</a></li>
                     <li><a href="{% url 'projects:dashboard_switch_role' %}" class="nav-item">Switch to Team Leader</a></li>
-                    
+
                     <li class="sidebar-menu-title">Explore</li>
                     <li><a href="{% url 'projects:contributors_list' %}" class="nav-item">
                         Contributors and Projects
@@ -487,7 +480,7 @@
                             <span class="badge bg-success ms-2">{{ matching_projects_count }} matches</span>
                         {% endif %}
                     </a></li>
-                    
+
                     <li class="sidebar-menu-title">My Activity</li>
                     <li><a href="{% url 'projects:invitations_list' %}" class="nav-item">
                         Project Invites
@@ -504,14 +497,14 @@
                     <li class="sidebar-menu-title">Navigation</li>
                     <li><a href="{% url 'projects:dashboard_leader' %}" class="nav-item">Dashboard</a></li>
                     <li><a href="{% url 'projects:dashboard_switch_role' %}" class="nav-item">Switch to Applicant</a></li>
-                    
+
                     <li class="sidebar-menu-title">Projects</li>
                     <li><a href="{% url 'projects:my_projects' %}" class="nav-item">My Projects</a></li>
                     <li><a href="{% url 'projects:create_project' %}" class="nav-item">
                         Add New Project
                         <i class="fas fa-magic ms-2" title="Uses Grok API for tech stack analysis"></i>
                     </a></li>
-                    
+
                     <li class="sidebar-menu-title">Team Management</li>
                     <li><a href="{% url 'projects:applications_list' %}" class="nav-item">
                         Team Requests
