@@ -23,7 +23,7 @@ class User(AbstractUser):
         ('applicant', 'Applicant'),
         ('leader', 'Team Leader'),
         ('company', 'Company'),
-    ], null=True, blank=True)
+    ], null=True, blank=True, default='applicant')
     created_at = models.DateTimeField(default=timezone.now)
     
     def get_tech_stack_list(self):
