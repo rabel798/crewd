@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In / Register - Crewd{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; padding: 3rem 0;">
+    <!-- Login Form -->
+    <div class="glass-card" style="width: 450px;">
+        <h2 style="margin-bottom: 1.5rem; color: #4B4ACF;">Sign In</h2>
+        <form method="post" action="{% url 'accounts:login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Email:</label>
+                {{ login_form.username }}
+                {% if login_form.username.errors %}
+                    <div class="error">{{ login_form.username.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password">Password:</label>
+                {{ login_form.password }}
+                {% if login_form.password.errors %}
+                    <div class="error">{{ login_form.password.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Sign In</button>
+        </form>
+    </div>
+    
+    <!-- Registration Form -->
+    <div class="glass-card" style="width: 450px;">
+        <h2 style="margin-bottom: 1.5rem; color: #4B4ACF;">Create Account</h2>
+        <form method="post" action="{% url 'accounts:register' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username:</label>
+                {{ register_form.username }}
+                {% if register_form.username.errors %}
+                    <div class="error">{{ register_form.username.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_email">Email:</label>
+                {{ register_form.email }}
+                {% if register_form.email.errors %}
+                    <div class="error">{{ register_form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password1">Password:</label>
+                {{ register_form.password1 }}
+                {% if register_form.password1.errors %}
+                    <div class="error">{{ register_form.password1.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password2">Confirm Password:</label>
+                {{ register_form.password2 }}
+                {% if register_form.password2.errors %}
+                    <div class="error">{{ register_form.password2.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_profile_picture">Profile Picture (optional):</label>
+                {{ register_form.profile_picture }}
+            </div>
+            <div class="form-group">
+                <label>Tech Stack (optional):</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                    {% for tech in tech_choices %}
+                    <div>
+                        <input type="checkbox" name="tech_stack" id="tech_{{ tech }}" value="{{ tech }}">
+                        <label for="tech_{{ tech }}">{{ tech }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Create Account</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

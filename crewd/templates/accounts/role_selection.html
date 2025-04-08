@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Your Role - Crewd{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; padding: 3rem 0; text-align: center;">
+    <h1 style="margin-bottom: 2rem;">Select Your Role</h1>
+    <p style="margin-bottom: 3rem; font-size: 1.1rem;">Choose how you want to use Crewd. Your experience will be tailored based on your selection.</p>
+    
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
+        <div class="glass-card" style="width: 250px; padding: 30px; text-align: center;">
+            <h3 style="margin-bottom: 1rem; color: #4B4ACF;">Team Applicant</h3>
+            <p style="margin-bottom: 1.5rem;">Find exciting projects and apply to join teams that match your skills and interests.</p>
+            <form method="post" action="{% url 'accounts:role_selection' %}">
+                {% csrf_token %}
+                <input type="hidden" name="role" value="applicant">
+                <button type="submit" class="btn" style="width: 100%;">Select</button>
+            </form>
+        </div>
+        
+        <div class="glass-card" style="width: 250px; padding: 30px; text-align: center;">
+            <h3 style="margin-bottom: 1rem; color: #4B4ACF;">Team Leader</h3>
+            <p style="margin-bottom: 1.5rem;">Create projects and find talented team members to bring your vision to life.</p>
+            <form method="post" action="{% url 'accounts:role_selection' %}">
+                {% csrf_token %}
+                <input type="hidden" name="role" value="leader">
+                <button type="submit" class="btn" style="width: 100%;">Select</button>
+            </form>
+        </div>
+        
+        <div class="glass-card" style="width: 250px; padding: 30px; text-align: center;">
+            <h3 style="margin-bottom: 1rem; color: #4B4ACF;">Company</h3>
+            <p style="margin-bottom: 1.5rem;">Post company projects and find skilled teams for your organization's needs.</p>
+            <form method="post" action="{% url 'accounts:role_selection' %}">
+                {% csrf_token %}
+                <input type="hidden" name="role" value="company">
+                <button type="submit" class="btn" style="width: 100%;">Select</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

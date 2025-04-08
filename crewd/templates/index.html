@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Crewd - Connect. Collaborate. Create.{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 4rem 0;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(to right, #4B4ACF, #40E0D0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome to Crewd</h1>
+    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto;">Building teams that transform ideas into reality. Connect with talented individuals or find your next project.</p>
+    
+    <div class="glass-card" style="max-width: 800px; margin: 0 auto 4rem auto; text-align: left; display: flex; justify-content: space-between; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 250px; padding: 1rem;">
+            <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Team Applicants</h3>
+            <p>Find exciting projects that match your skills and interests. Apply to join teams and collaborate on innovative ideas.</p>
+            <a href="{% url 'accounts:register' %}" class="btn" style="margin-top: 1rem;">Join as Applicant</a>
+        </div>
+        
+        <div style="flex: 1; min-width: 250px; padding: 1rem;">
+            <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Team Leaders</h3>
+            <p>Create projects and find the perfect team members. Lead talented individuals to bring your vision to life.</p>
+            <a href="{% url 'accounts:register' %}" class="btn" style="margin-top: 1rem;">Join as Team Leader</a>
+        </div>
+        
+        <div style="flex: 1; min-width: 250px; padding: 1rem;">
+            <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Companies</h3>
+            <p>Post projects and find skilled teams. Connect with top talent to complete your company's initiatives.</p>
+            <a href="{% url 'accounts:register' %}" class="btn" style="margin-top: 1rem;">Join as Company</a>
+        </div>
+    </div>
+    
+    <h2 style="margin-bottom: 2rem;">How It Works</h2>
+    
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 3rem;">
+        <div class="glass-card" style="width: 300px; text-align: center;">
+            <div style="font-size: 3rem; color: #4B4ACF; margin-bottom: 1rem;">1</div>
+            <h3 style="margin-bottom: 1rem;">Create Your Profile</h3>
+            <p>Sign up and create your profile, highlighting your skills and experience.</p>
+        </div>
+        
+        <div class="glass-card" style="width: 300px; text-align: center;">
+            <div style="font-size: 3rem; color: #4B4ACF; margin-bottom: 1rem;">2</div>
+            <h3 style="margin-bottom: 1rem;">Connect with Projects</h3>
+            <p>Browse projects or create your own. Find the perfect match for your skills.</p>
+        </div>
+        
+        <div class="glass-card" style="width: 300px; text-align: center;">
+            <div style="font-size: 3rem; color: #4B4ACF; margin-bottom: 1rem;">3</div>
+            <h3 style="margin-bottom: 1rem;">Collaborate & Create</h3>
+            <p>Work together with your team to bring ideas to life and create something amazing.</p>
+        </div>
+    </div>
+    
+    <a href="{% url 'accounts:register' %}" class="btn" style="font-size: 1.2rem; padding: 15px 30px;">Get Started Today</a>
+</div>
+{% endblock %}
