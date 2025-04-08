@@ -92,8 +92,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# User model
-AUTH_USER_MODEL = 'accounts.User'
+# User model - we're using the default Django User model with a OneToOne Profile
+# AUTH_USER_MODEL = 'accounts.User'
 
 # Authentication settings
 LOGIN_URL = 'accounts:login'

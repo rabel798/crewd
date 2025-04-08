@@ -2,19 +2,6 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 
-# Available tech choices for skills
-TECH_CHOICES = [
-    'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Node.js',
-    'Python', 'Django', 'Flask', 'FastAPI', 'PHP', 'Laravel', 'Symfony',
-    'Ruby', 'Ruby on Rails', 'Java', 'Spring Boot', 'C#', '.NET', 'Go',
-    'Rust', 'Swift', 'Kotlin', 'Flutter', 'React Native', 'HTML', 'CSS',
-    'SASS/SCSS', 'Tailwind CSS', 'Bootstrap', 'PostgreSQL', 'MySQL',
-    'MongoDB', 'Redis', 'Firebase', 'AWS', 'Azure', 'Google Cloud',
-    'Docker', 'Kubernetes', 'GraphQL', 'REST API', 'TensorFlow', 'PyTorch',
-    'Machine Learning', 'Data Science', 'Blockchain', 'Solidity', 'Web3',
-    'DevOps', 'CI/CD', 'Testing', 'Mobile Development', 'Game Development',
-    'Unity', 'UI/UX Design', 'WordPress', 'Shopify', 'Linux', 'Git'
-]
 
 class Project(models.Model):
     """Project model for team leaders to create projects"""
@@ -43,10 +30,11 @@ class Project(models.Model):
         """Convert comma-separated skills to list"""
         if not self.required_skills:
             return []
-        return [skill.strip() for skill in self.required_skills.split(',')]
+        return [skill.strip() for skill in self.required_skills.split(',') if skill.strip()]
     
     def __str__(self):
-        return self.title
+        return f"{self.title} by {self.creator.username}"
+
 
 class ProjectMembership(models.Model):
     """Relationship between users and projects"""
@@ -74,7 +62,8 @@ class ProjectMembership(models.Model):
         unique_together = ('user', 'project')
     
     def __str__(self):
-        return f"{self.user.username} in {self.project.title}"
+        return f"{self.user.username} as {self.role} in {self.project.title}"
+
 
 class Application(models.Model):
     """Application from a user to join a project"""
@@ -104,7 +93,8 @@ class Application(models.Model):
         unique_together = ('project', 'applicant')
     
     def __str__(self):
-        return f"{self.applicant.username}'s application to {self.project.title}"
+        return f"Application by {self.applicant.username} for {self.project.title}"
+
 
 class Invitation(models.Model):
     """Invitation from a team leader to a user to join a project"""
@@ -139,7 +129,8 @@ class Invitation(models.Model):
         unique_together = ('project', 'recipient')
     
     def __str__(self):
-        return f"Invitation to {self.recipient.username} for {self.project.title}"
+        return f"Invitation from {self.sender.username} to {self.recipient.username} for {self.project.title}"
+
 
 class Group(models.Model):
     """Group chat for project members"""
@@ -152,7 +143,8 @@ class Group(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return self.name
+        return f"{self.name} for {self.project.title}"
+
 
 class Message(models.Model):
     """Message in a group chat"""
@@ -172,5 +164,4 @@ class Message(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        group_name = self.group.name if self.group else "No Group"
-        return f"Message from {self.sender.username} in {group_name}"
+        return f"Message by {self.sender.username} in {self.group.name if self.group else 'Direct Message'}"

@@ -1,858 +1,656 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
-# Import models
-from .models import Project, Application, Invitation, ProjectMembership, Group, Message, TECH_CHOICES
+from accounts.models import UserProfile
+from .models import (
+    Project, Application, ProjectMembership, 
+    Invitation, Group, Message
+)
+from .forms import ProjectForm, ApplicationForm
 
-User = get_user_model()
 
 class SwitchRoleView(LoginRequiredMixin, View):
     """View for switching between applicant and team leader roles"""
+    template_name = 'dashboard/switch_role.html'
     
     def get(self, request):
-        user = request.user
+        return render(request, self.template_name)
+    
+    def post(self, request):
+        role = request.POST.get('role')
         
-        if user.role == 'applicant':
-            user.role = 'leader'
-            user.save()
-            messages.success(request, "You're now in Team Leader mode!")
-            return redirect('projects:team_leader_dashboard')
-        elif user.role == 'leader':
-            user.role = 'applicant'
-            user.save()
-            messages.success(request, "You're now in Applicant mode!")
-            return redirect('projects:applicant_dashboard')
+        if role in ['applicant', 'leader', 'company']:
+            user_profile = request.user.profile
+            user_profile.role = role
+            user_profile.save()
+            
+            if role == 'applicant':
+                messages.success(request, "Role switched to Applicant")
+                return redirect('projects:applicant_dashboard')
+            elif role == 'leader':
+                messages.success(request, "Role switched to Team Leader")
+                return redirect('projects:team_leader_dashboard')
+            elif role == 'company':
+                messages.success(request, "Role switched to Company")
+                # Redirect to future company dashboard
+                return redirect('projects:team_leader_dashboard')  # Placeholder
         else:
-            messages.error(request, "Invalid role switch.")
-            return redirect('dashboard')
+            messages.error(request, "Invalid role selected.")
+            return redirect('projects:switch_role')
 
 
 class ApplicantDashboardView(LoginRequiredMixin, View):
-    """Dashboard view for applicant role"""
+    """Dashboard view for applicants"""
+    template_name = 'dashboard/applicant_dashboard.html'
     
     def get(self, request):
-        user = request.user
+        # If user is not in applicant role, redirect to switch role page
+        if request.user.profile.role != 'applicant':
+            messages.info(request, "Please switch to applicant role to access this dashboard.")
+            return redirect('projects:switch_role')
         
-        if user.role != 'applicant':
-            messages.warning(request, "Switched to Applicant view.")
-            user.role = 'applicant'
-            user.save()
-        
-        # Get recommended projects based on user tech stack
-        recommended_projects = []
-        user_tech_stack = user.get_tech_stack_list()
-        
-        if user_tech_stack:
-            # Find projects that require at least one of the user's skills
-            all_projects = Project.objects.filter(status='active').exclude(creator=user)
-            
-            for project in all_projects:
-                project_skills = project.get_required_skills_list()
-                matching_skills = set(user_tech_stack) & set(project_skills)
-                
-                if matching_skills:
-                    project.matching_skill_count = len(matching_skills)
-                    recommended_projects.append(project)
-            
-            # Sort by number of matching skills (descending)
-            recommended_projects.sort(key=lambda p: p.matching_skill_count, reverse=True)
-            recommended_projects = recommended_projects[:6]  # Limit to 6 projects
-        
-        # Get active memberships (projects user is currently participating in)
-        active_memberships = ProjectMembership.objects.filter(
-            user=user,
-            project__status='active'
-        ).select_related('project').order_by('-joined_at')[:3]
-        
-        # Get pending invitations count for notification
-        pending_invitations_count = Invitation.objects.filter(
-            recipient=user,
-            status='pending'
-        ).count()
-        
+        # Get basic stats for dashboard
         context = {
-            'active_tab': 'dashboard',
-            'recommended_projects': recommended_projects,
-            'active_memberships': active_memberships,
-            'pending_invitations_count': pending_invitations_count,
+            'applications_count': Application.objects.filter(
+                applicant=request.user
+            ).count(),
+            'invitations_count': Invitation.objects.filter(
+                recipient=request.user,
+                status='pending'
+            ).count(),
+            'memberships_count': ProjectMembership.objects.filter(
+                user=request.user
+            ).count(),
         }
         
-        return render(request, 'dashboard/applicant_dashboard.html', context)
+        return render(request, self.template_name, context)
 
 
 class TeamLeaderDashboardView(LoginRequiredMixin, View):
-    """Dashboard view for team leader role"""
+    """Dashboard view for team leaders"""
+    template_name = 'dashboard/team_leader_dashboard.html'
     
     def get(self, request):
-        user = request.user
+        # If user is not in leader role, redirect to switch role page
+        if request.user.profile.role != 'leader':
+            messages.info(request, "Please switch to team leader role to access this dashboard.")
+            return redirect('projects:switch_role')
         
-        if user.role != 'leader':
-            messages.warning(request, "Switched to Team Leader view.")
-            user.role = 'leader'
-            user.save()
-        
-        # Get user's projects
-        user_projects = Project.objects.filter(creator=user).order_by('-created_at')[:6]
-        
-        # Get recent applications to user's projects
-        recent_applications = Application.objects.filter(
-            project__creator=user
-        ).select_related('applicant', 'project').order_by('-created_at')[:5]
-        
-        # Get pending applications count for notification
-        pending_applications_count = Application.objects.filter(
-            project__creator=user,
-            status='pending'
-        ).count()
-        
+        # Get basic stats for dashboard
         context = {
-            'active_tab': 'dashboard',
-            'user_projects': user_projects,
-            'recent_applications': recent_applications,
-            'pending_applications_count': pending_applications_count,
+            'projects_count': Project.objects.filter(
+                creator=request.user
+            ).count(),
+            'applications_count': Application.objects.filter(
+                project__creator=request.user,
+                status='pending'
+            ).count(),
+            'invitations_count': Invitation.objects.filter(
+                sender=request.user,
+                status='pending'
+            ).count(),
         }
         
-        return render(request, 'dashboard/team_leader_dashboard.html', context)
+        return render(request, self.template_name, context)
 
 
-class ContributorsListView(LoginRequiredMixin, View):
-    """View for listing all contributors (users)"""
+# Applicant views
+class ContributorsListView(LoginRequiredMixin, ListView):
+    """List view of all contributors"""
+    template_name = 'projects/contributors_list.html'
+    context_object_name = 'contributors'
+    paginate_by = 12
     
-    def get(self, request):
-        query = request.GET.get('q', '')
-        tech_filter = request.GET.get('tech', '')
-        role_filter = request.GET.get('role', '')
+    def get_queryset(self):
+        # Get search query
+        query = self.request.GET.get('q', '')
+        # Filter by tech stack
+        tech_filter = self.request.GET.getlist('tech')
         
-        users = User.objects.all().exclude(id=request.user.id)
+        # Base queryset
+        queryset = UserProfile.objects.exclude(user=self.request.user)
         
-        # Apply filters
+        # Apply search query
         if query:
-            users = users.filter(
-                Q(username__icontains=query) | 
-                Q(email__icontains=query) |
+            queryset = queryset.filter(
+                Q(user__username__icontains=query) |
                 Q(tech_stack__icontains=query)
             )
         
+        # Apply tech stack filters
         if tech_filter:
-            users = users.filter(tech_stack__icontains=tech_filter)
-            
-        if role_filter:
-            users = users.filter(role=role_filter)
-        
-        # Paginate results
-        paginator = Paginator(users, 12)  # 12 users per page
-        page_number = request.GET.get('page', 1)
-        contributors = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'contributors',
-            'active_subtab': 'contributors',
-            'contributors': contributors,
-            'all_tech_options': TECH_CHOICES,
-        }
-        
-        return render(request, 'dashboard/applicant/contributors.html', context)
-
-
-class ProjectsListView(LoginRequiredMixin, View):
-    """View for listing all projects"""
+            for tech in tech_filter:
+                queryset = queryset.filter(tech_stack__icontains=tech)
+                
+        return queryset
     
-    def get(self, request):
-        query = request.GET.get('q', '')
-        tech_filter = request.GET.get('tech', '')
-        status_filter = request.GET.get('status', '')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add tech stack choices for filtering
+        context['tech_choices'] = sorted(set([
+            tech for profile in UserProfile.objects.all()
+            for tech in profile.get_tech_stack_list()
+        ]))
+        # Add selected filters
+        context['selected_tech'] = self.request.GET.getlist('tech')
+        context['search_query'] = self.request.GET.get('q', '')
+        return context
+
+
+class ProjectsListView(LoginRequiredMixin, ListView):
+    """List view of all projects for applicants"""
+    template_name = 'projects/projects_list.html'
+    context_object_name = 'projects'
+    paginate_by = 9
+    
+    def get_queryset(self):
+        # Get search query and filters
+        query = self.request.GET.get('q', '')
+        status_filter = self.request.GET.get('status', 'active')
+        tech_filter = self.request.GET.getlist('tech')
         
-        projects = Project.objects.all().exclude(creator=request.user)
+        # Base queryset - exclude user's own projects
+        queryset = Project.objects.all()
+        if status_filter and status_filter != 'all':
+            queryset = queryset.filter(status=status_filter)
         
-        # Apply filters
+        # Apply search
         if query:
-            projects = projects.filter(
-                Q(title__icontains=query) | 
-                Q(description__icontains=query)
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(required_skills__icontains=query)
             )
         
+        # Apply tech filters
         if tech_filter:
-            projects = projects.filter(required_skills__icontains=tech_filter)
-            
-        if status_filter:
-            projects = projects.filter(status=status_filter)
-        else:
-            # Default to active projects
-            projects = projects.filter(status='active')
+            for tech in tech_filter:
+                queryset = queryset.filter(required_skills__icontains=tech)
         
-        # Get recommended projects based on user tech stack
-        recommended_projects = []
-        user_tech_stack = request.user.get_tech_stack_list()
+        # Add match score based on user tech stack
+        user_tech_stack = self.request.user.profile.get_tech_stack_list()
+        for project in queryset:
+            project_skills = project.get_required_skills_list()
+            project.match_score = len(set(user_tech_stack) & set(project_skills))
+            if user_tech_stack:
+                project.match_percentage = int((project.match_score / len(user_tech_stack)) * 100)
+            else:
+                project.match_percentage = 0
         
+        # Sort by match score if user has skills
         if user_tech_stack:
-            # Find projects that require at least one of the user's skills
-            for project in projects:
-                project_skills = project.get_required_skills_list()
-                matching_skills = set(user_tech_stack) & set(project_skills)
-                
-                if matching_skills:
-                    project.matching_skill_count = len(matching_skills)
-                    recommended_projects.append(project)
-            
-            # Sort by number of matching skills (descending)
-            recommended_projects.sort(key=lambda p: p.matching_skill_count, reverse=True)
-            recommended_projects = recommended_projects[:6]  # Limit to 6 projects
-            
-            # Remove recommended projects from main list to avoid duplication
-            project_ids = [p.id for p in recommended_projects]
-            projects = projects.exclude(id__in=project_ids)
+            return sorted(queryset, key=lambda p: p.match_score, reverse=True)
         
-        # Paginate results
-        paginator = Paginator(projects, 9)  # 9 projects per page
-        page_number = request.GET.get('page', 1)
-        projects_page = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'projects',
-            'active_subtab': 'projects',
-            'projects': projects_page,
-            'recommended_projects': recommended_projects,
-            'all_tech_options': TECH_CHOICES,
-        }
-        
-        return render(request, 'dashboard/applicant/projects.html', context)
-
-
-class InvitationsListView(LoginRequiredMixin, View):
-    """View for listing invitations received by the user"""
+        # Otherwise sort by created date
+        return queryset.order_by('-created_at')
     
-    def get(self, request):
-        status_filter = request.GET.get('status', 'pending')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add tech choices
+        all_projects = Project.objects.all()
+        tech_choices = set()
+        for project in all_projects:
+            tech_choices.update(project.get_required_skills_list())
         
-        # Set status filter
-        if status_filter not in ['pending', 'accepted', 'rejected', 'all']:
-            status_filter = 'pending'
+        context['tech_choices'] = sorted(tech_choices)
+        context['selected_tech'] = self.request.GET.getlist('tech')
+        context['search_query'] = self.request.GET.get('q', '')
+        context['status_filter'] = self.request.GET.get('status', 'active')
         
-        # Get invitations
-        if status_filter == 'all':
-            invitations = Invitation.objects.filter(recipient=request.user)
-        else:
-            invitations = Invitation.objects.filter(recipient=request.user, status=status_filter)
-        
-        invitations = invitations.select_related('project', 'sender').order_by('-created_at')
-        
-        # Get pending count for notification badge
-        pending_count = Invitation.objects.filter(recipient=request.user, status='pending').count()
-        
-        # Paginate results
-        paginator = Paginator(invitations, 10)  # 10 invitations per page
-        page_number = request.GET.get('page', 1)
-        invitations_page = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'invitations',
-            'invitations': invitations_page,
-            'invitation_status': status_filter,
-            'pending_count': pending_count,
-        }
-        
-        return render(request, 'dashboard/applicant/invitations.html', context)
+        return context
 
+
+class InvitationsListView(LoginRequiredMixin, ListView):
+    """List view of received invitations"""
+    template_name = 'projects/invitations_list.html'
+    context_object_name = 'invitations'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Invitation.objects.filter(recipient=self.request.user).order_by('-created_at')
+    
 
 class UpdateInvitationView(LoginRequiredMixin, View):
-    """View for updating invitation status (accept/reject)"""
+    """Update invitation status"""
     
     def post(self, request, invitation_id):
         invitation = get_object_or_404(Invitation, id=invitation_id, recipient=request.user)
-        status = request.POST.get('status')
+        action = request.POST.get('action')
         
-        if status not in ['accepted', 'rejected']:
-            messages.error(request, "Invalid status.")
-            return redirect('projects:invitations_list')
-        
-        invitation.status = status
-        invitation.save()
-        
-        if status == 'accepted':
-            # Add user to project members
-            project = invitation.project
+        if action == 'accept':
+            invitation.status = 'accepted'
+            invitation.save()
+            
+            # Create project membership
             ProjectMembership.objects.create(
                 user=request.user,
-                project=project,
+                project=invitation.project,
                 role='member'
             )
             
-            # Create or get project group
-            group, created = Group.objects.get_or_create(
-                project=project,
-                defaults={'name': f"{project.title} Group"}
-            )
-            
-            messages.success(request, f"You have accepted the invitation to join {project.title}.")
-        else:
-            messages.info(request, "Invitation rejected.")
+            messages.success(request, f"You have joined {invitation.project.title}.")
+        
+        elif action == 'reject':
+            invitation.status = 'rejected'
+            invitation.save()
+            messages.info(request, f"Invitation declined.")
         
         return redirect('projects:invitations_list')
 
 
-class MyContributionsView(LoginRequiredMixin, View):
-    """View for listing user's contributions (project memberships)"""
+class MyContributionsView(LoginRequiredMixin, ListView):
+    """List view of user's applications and project memberships"""
+    template_name = 'projects/my_contributions.html'
     
-    def get(self, request):
-        status_filter = request.GET.get('status', 'active')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         
-        # Get memberships
-        memberships = ProjectMembership.objects.filter(user=request.user)
+        # Get applications and memberships
+        context['applications'] = Application.objects.filter(
+            applicant=self.request.user
+        ).order_by('-created_at')
         
-        if status_filter == 'active':
-            memberships = memberships.filter(project__status='active')
-        elif status_filter == 'completed':
-            memberships = memberships.filter(project__status='completed')
-        # 'all' shows everything
+        context['memberships'] = ProjectMembership.objects.filter(
+            user=self.request.user
+        ).order_by('-joined_at')
         
-        memberships = memberships.select_related('project', 'project__creator').order_by('-joined_at')
-        
-        # Paginate results
-        paginator = Paginator(memberships, 9)  # 9 projects per page
-        page_number = request.GET.get('page', 1)
-        contributions = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'contributions',
-            'contributions': contributions,
-            'contribution_status': status_filter,
-        }
-        
-        return render(request, 'dashboard/applicant/contributions.html', context)
+        return context
+    
+    def get_queryset(self):
+        # Empty queryset since we're using get_context_data
+        return ProjectMembership.objects.none()
 
 
-class GroupsListView(LoginRequiredMixin, View):
-    """View for listing user's groups"""
+class GroupsListView(LoginRequiredMixin, ListView):
+    """List view of user's group chats"""
+    template_name = 'projects/groups_list.html'
+    context_object_name = 'groups'
     
-    def get(self, request):
-        # Get memberships that have groups
-        memberships = ProjectMembership.objects.filter(
-            user=request.user,
-            project__group__isnull=False
-        ).select_related('project', 'project__group', 'project__creator').order_by('-project__group__created_at')
+    def get_queryset(self):
+        # Get projects where user is a member
+        user_projects = Project.objects.filter(
+            memberships__user=self.request.user
+        )
         
-        # Paginate results
-        paginator = Paginator(memberships, 9)  # 9 groups per page
-        page_number = request.GET.get('page', 1)
-        groups = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'groups',
-            'groups': groups,
-        }
-        
-        return render(request, 'dashboard/applicant/groups.html', context)
+        # Get groups for those projects
+        return Group.objects.filter(project__in=user_projects).order_by('name')
 
 
 class ViewGroupView(LoginRequiredMixin, View):
-    """View for a specific group chat"""
+    """View for a group chat"""
+    template_name = 'projects/view_group.html'
     
     def get(self, request, group_id):
         group = get_object_or_404(Group, id=group_id)
-        project = group.project
         
-        # Check if user is a member of the project
-        if not ProjectMembership.objects.filter(user=request.user, project=project).exists():
-            messages.error(request, "You don't have access to this group.")
+        # Check if user is a member
+        is_member = ProjectMembership.objects.filter(
+            user=request.user,
+            project=group.project
+        ).exists()
+        
+        if not is_member and group.project.creator != request.user:
+            messages.error(request, "You are not a member of this group.")
             return redirect('projects:groups_list')
         
-        # Get messages
+        # Get messages for the group
         messages_list = Message.objects.filter(group=group).order_by('created_at')
         
-        # Get members
-        members = ProjectMembership.objects.filter(project=project).select_related('user')
-        
         context = {
-            'active_tab': 'groups',
             'group': group,
-            'project': project,
             'messages': messages_list,
-            'members': members,
+            'project': group.project,
+            'is_leader': group.project.creator == request.user
         }
-        
-        return render(request, 'dashboard/group_chat.html', context)
+        return render(request, self.template_name, context)
     
     def post(self, request, group_id):
         group = get_object_or_404(Group, id=group_id)
-        project = group.project
+        content = request.POST.get('message', '').strip()
         
-        # Check if user is a member of the project
-        if not ProjectMembership.objects.filter(user=request.user, project=project).exists():
-            messages.error(request, "You don't have access to this group.")
+        # Check if user is a member
+        is_member = ProjectMembership.objects.filter(
+            user=request.user,
+            project=group.project
+        ).exists()
+        
+        if not is_member and group.project.creator != request.user:
+            messages.error(request, "You are not a member of this group.")
             return redirect('projects:groups_list')
         
-        message_content = request.POST.get('message', '').strip()
-        
-        if message_content:
+        if content:
             Message.objects.create(
+                group=group,
                 sender=request.user,
-                content=message_content,
-                group=group
+                content=content
             )
         
         return redirect('projects:view_group', group_id=group_id)
 
 
-class MyProjectsView(LoginRequiredMixin, View):
-    """View for listing team leader's projects"""
+# Team Leader views
+class MyProjectsView(LoginRequiredMixin, ListView):
+    """List view of user's projects"""
+    template_name = 'projects/my_projects.html'
+    context_object_name = 'projects'
     
-    def get(self, request):
-        status_filter = request.GET.get('status', 'active')
-        
-        # Get projects
-        projects = Project.objects.filter(creator=request.user)
-        
-        if status_filter != 'all':
-            projects = projects.filter(status=status_filter)
-        
-        projects = projects.order_by('-created_at')
-        
-        # Paginate results
-        paginator = Paginator(projects, 9)  # 9 projects per page
-        page_number = request.GET.get('page', 1)
-        projects_page = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'my_projects',
-            'projects': projects_page,
-            'project_status': status_filter,
-        }
-        
-        return render(request, 'dashboard/leader/my_projects.html', context)
+    def get_queryset(self):
+        return Project.objects.filter(creator=self.request.user).order_by('-created_at')
 
 
 class CreateProjectView(LoginRequiredMixin, View):
-    """View for creating a new project"""
+    """Create a new project"""
+    template_name = 'projects/create_project.html'
     
     def get(self, request):
-        context = {
-            'active_tab': 'create_project',
-            'tech_choices': TECH_CHOICES,
-        }
-        
-        return render(request, 'dashboard/leader/create_project.html', context)
+        form = ProjectForm()
+        return render(request, self.template_name, {'form': form})
     
     def post(self, request):
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        team_size = request.POST.get('team_size')
-        duration = request.POST.get('duration')
-        required_skills = request.POST.getlist('required_skills')
+        form = ProjectForm(request.POST)
         
-        if not all([title, description, team_size, duration]):
-            messages.error(request, "All fields are required.")
-            return redirect('projects:create_project')
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.creator = request.user
+            project.save()
+            
+            # Create a group chat for the project
+            Group.objects.create(
+                name=f"{project.title} Group",
+                project=project
+            )
+            
+            # Add creator as a member
+            ProjectMembership.objects.create(
+                user=request.user,
+                project=project,
+                role='admin'
+            )
+            
+            messages.success(request, f"Project '{project.title}' created successfully.")
+            return redirect('projects:manage_project', project_id=project.id)
         
-        try:
-            team_size = int(team_size)
-            if team_size < 1:
-                raise ValueError("Team size must be at least 1.")
-        except ValueError:
-            messages.error(request, "Team size must be a valid number.")
-            return redirect('projects:create_project')
-        
-        # Create project
-        project = Project.objects.create(
-            title=title,
-            description=description,
-            team_size=team_size,
-            duration=duration,
-            required_skills=','.join(required_skills) if required_skills else '',
-            creator=request.user
-        )
-        
-        # Add creator as project member (admin)
-        ProjectMembership.objects.create(
-            user=request.user,
-            project=project,
-            role='admin'
-        )
-        
-        # Create project group
-        Group.objects.create(
-            name=f"{project.title} Group",
-            project=project
-        )
-        
-        messages.success(request, f"Project '{project.title}' created successfully!")
-        return redirect('projects:manage_project', project_id=project.id)
+        return render(request, self.template_name, {'form': form})
 
 
 class ManageProjectView(LoginRequiredMixin, View):
-    """View for managing a project as team leader"""
-    
-    def get(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-        
-        # Check if user is the project creator
-        if project.creator != request.user:
-            messages.error(request, "You don't have permission to manage this project.")
-            return redirect('projects:my_projects')
-        
-        # Get project members
-        members = ProjectMembership.objects.filter(project=project).select_related('user')
-        
-        # Get pending applications
-        pending_applications = Application.objects.filter(
-            project=project,
-            status='pending'
-        ).select_related('applicant').order_by('-created_at')
-        
-        # Get pending invitations
-        pending_invitations = Invitation.objects.filter(
-            project=project,
-            status='pending'
-        ).select_related('recipient').order_by('-created_at')
-        
-        context = {
-            'active_tab': 'my_projects',
-            'project': project,
-            'members': members,
-            'pending_applications': pending_applications,
-            'pending_invitations': pending_invitations,
-            'tech_choices': TECH_CHOICES,
-        }
-        
-        return render(request, 'dashboard/leader/manage_project.html', context)
-    
-    def post(self, request, project_id):
-        project = get_object_or_404(Project, id=project_id)
-        
-        # Check if user is the project creator
-        if project.creator != request.user:
-            messages.error(request, "You don't have permission to manage this project.")
-            return redirect('projects:my_projects')
-        
-        action = request.POST.get('action')
-        
-        if action == 'update_project':
-            # Update project details
-            project.title = request.POST.get('title', project.title)
-            project.description = request.POST.get('description', project.description)
-            
-            try:
-                team_size = int(request.POST.get('team_size', project.team_size))
-                if team_size < 1:
-                    raise ValueError()
-                project.team_size = team_size
-            except ValueError:
-                messages.error(request, "Team size must be a valid number.")
-                return redirect('projects:manage_project', project_id=project_id)
-            
-            project.duration = request.POST.get('duration', project.duration)
-            required_skills = request.POST.getlist('required_skills')
-            project.required_skills = ','.join(required_skills) if required_skills else ''
-            
-            project.save()
-            
-            messages.success(request, "Project updated successfully!")
-        
-        elif action == 'update_status':
-            status = request.POST.get('status')
-            
-            if status not in ['active', 'completed', 'cancelled']:
-                messages.error(request, "Invalid status.")
-                return redirect('projects:manage_project', project_id=project_id)
-            
-            project.status = status
-            project.save()
-            
-            messages.success(request, f"Project status updated to '{status}'.")
-        
-        elif action == 'remove_member':
-            member_id = request.POST.get('member_id')
-            
-            if not member_id:
-                messages.error(request, "Member ID is required.")
-                return redirect('projects:manage_project', project_id=project_id)
-            
-            try:
-                membership = ProjectMembership.objects.get(
-                    project=project,
-                    user_id=member_id
-                )
-                
-                # Don't allow removing the project creator
-                if membership.user == project.creator:
-                    messages.error(request, "You cannot remove the project creator.")
-                    return redirect('projects:manage_project', project_id=project_id)
-                
-                membership.delete()
-                messages.success(request, "Member removed successfully.")
-            except ProjectMembership.DoesNotExist:
-                messages.error(request, "Membership not found.")
-        
-        return redirect('projects:manage_project', project_id=project_id)
-
-
-class FindContributorsView(LoginRequiredMixin, View):
-    """View for finding contributors for a project"""
+    """Manage a project"""
+    template_name = 'projects/manage_project.html'
     
     def get(self, request, project_id):
         project = get_object_or_404(Project, id=project_id, creator=request.user)
-        query = request.GET.get('q', '')
-        tech_filter = request.GET.get('tech', '')
+        form = ProjectForm(instance=project)
         
-        # Get users excluding the ones already in the project
-        existing_members_ids = ProjectMembership.objects.filter(project=project).values_list('user_id', flat=True)
-        users = User.objects.exclude(id__in=existing_members_ids).exclude(id=request.user.id)
+        # Get team members
+        members = ProjectMembership.objects.filter(project=project)
         
-        # Check for existing pending invitations
-        pending_invites_ids = Invitation.objects.filter(
+        # Get pending applications
+        applications = Application.objects.filter(
             project=project,
             status='pending'
-        ).values_list('recipient_id', flat=True)
+        ).order_by('-created_at')
         
-        # Apply filters
+        context = {
+            'project': project,
+            'form': form,
+            'members': members,
+            'applications': applications
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, project_id):
+        project = get_object_or_404(Project, id=project_id, creator=request.user)
+        form = ProjectForm(request.POST, instance=project)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Project '{project.title}' updated successfully.")
+            return redirect('projects:manage_project', project_id=project_id)
+        
+        # Get team members and applications for context
+        members = ProjectMembership.objects.filter(project=project)
+        applications = Application.objects.filter(
+            project=project,
+            status='pending'
+        ).order_by('-created_at')
+        
+        context = {
+            'project': project,
+            'form': form,
+            'members': members,
+            'applications': applications
+        }
+        return render(request, self.template_name, context)
+
+
+class FindContributorsView(LoginRequiredMixin, ListView):
+    """Find potential contributors for a project"""
+    template_name = 'projects/find_contributors.html'
+    context_object_name = 'contributors'
+    paginate_by = 12
+    
+    def get_queryset(self):
+        project_id = self.kwargs.get('project_id')
+        project = get_object_or_404(Project, id=project_id, creator=self.request.user)
+        
+        # Get search query
+        query = self.request.GET.get('q', '')
+        tech_filter = self.request.GET.getlist('tech')
+        
+        # Start with all users
+        queryset = UserProfile.objects.all()
+        
+        # Exclude users who are already members or the creator
+        member_ids = ProjectMembership.objects.filter(
+            project=project
+        ).values_list('user_id', flat=True)
+        
+        queryset = queryset.exclude(
+            Q(user_id__in=member_ids) | Q(user=self.request.user)
+        )
+        
+        # Apply search
         if query:
-            users = users.filter(
-                Q(username__icontains=query) | 
-                Q(email__icontains=query) |
+            queryset = queryset.filter(
+                Q(user__username__icontains=query) |
                 Q(tech_stack__icontains=query)
             )
         
+        # Apply tech filters
         if tech_filter:
-            users = users.filter(tech_stack__icontains=tech_filter)
+            for tech in tech_filter:
+                queryset = queryset.filter(tech_stack__icontains=tech)
         
-        # Mark users with pending invitations
-        for user in users:
-            user.has_pending_invite = user.id in pending_invites_ids
+        # Calculate match scores based on project required skills
+        project_skills = project.get_required_skills_list()
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        project_id = self.kwargs.get('project_id')
+        project = get_object_or_404(Project, id=project_id, creator=self.request.user)
+        context['project'] = project
         
         # Get project's required skills
         project_skills = project.get_required_skills_list()
         
-        # Find users with matching skills
-        recommended_users = []
-        for user in users:
-            user_tech_stack = user.get_tech_stack_list()
-            matching_skills = set(user_tech_stack) & set(project_skills)
+        # Calculate match scores for each contributor
+        contributors = context['contributors']
+        for contributor in contributors:
+            user_skills = contributor.get_tech_stack_list()
+            match_count = len(set(user_skills) & set(project_skills))
             
-            if matching_skills:
-                user.matching_skill_count = len(matching_skills)
-                user.matching_skills = list(matching_skills)
-                recommended_users.append(user)
+            if project_skills:
+                contributor.match_percentage = int((match_count / len(project_skills)) * 100)
+            else:
+                contributor.match_percentage = 0
         
-        # Sort by number of matching skills (descending)
-        recommended_users.sort(key=lambda u: u.matching_skill_count, reverse=True)
+        # Sort by match percentage if project has skills
+        if project_skills:
+            context['contributors'] = sorted(
+                contributors,
+                key=lambda c: c.match_percentage,
+                reverse=True
+            )
         
-        # Paginate other users
-        other_users = [u for u in users if u not in recommended_users]
-        paginator = Paginator(other_users, 12)  # 12 users per page
-        page_number = request.GET.get('page', 1)
-        other_users_page = paginator.get_page(page_number)
+        # Get all tech skills for filtering
+        all_profiles = UserProfile.objects.all()
+        tech_choices = set()
+        for profile in all_profiles:
+            tech_choices.update(profile.get_tech_stack_list())
         
-        context = {
-            'active_tab': 'my_projects',
-            'project': project,
-            'recommended_users': recommended_users[:6],  # Limit to 6 users
-            'other_users': other_users_page,
-            'tech_filter': tech_filter,
-            'query': query,
-            'all_tech_options': TECH_CHOICES,
-        }
+        context['tech_choices'] = sorted(tech_choices)
+        context['selected_tech'] = self.request.GET.getlist('tech')
+        context['search_query'] = self.request.GET.get('q', '')
         
-        return render(request, 'dashboard/leader/find_contributors.html', context)
+        # Check for pending invitations
+        pending_invitations = Invitation.objects.filter(
+            project=project,
+            status='pending'
+        ).values_list('recipient_id', flat=True)
+        context['pending_invitations'] = pending_invitations
+        
+        return context
 
 
 class InviteContributorView(LoginRequiredMixin, View):
-    """View for inviting a contributor to a project"""
-    
-    def get(self, request, project_id, user_id):
-        project = get_object_or_404(Project, id=project_id, creator=request.user)
-        invited_user = get_object_or_404(User, id=user_id)
-        
-        # Check if user is already a member
-        if ProjectMembership.objects.filter(project=project, user=invited_user).exists():
-            messages.error(request, f"{invited_user.username} is already a member of this project.")
-            return redirect('projects:find_contributors', project_id=project_id)
-        
-        # Check if there's already a pending invitation
-        if Invitation.objects.filter(project=project, recipient=invited_user, status='pending').exists():
-            messages.error(request, f"{invited_user.username} already has a pending invitation.")
-            return redirect('projects:find_contributors', project_id=project_id)
-        
-        context = {
-            'active_tab': 'my_projects',
-            'project': project,
-            'invited_user': invited_user,
-        }
-        
-        return render(request, 'dashboard/leader/invite_contributor.html', context)
+    """Invite a user to a project"""
     
     def post(self, request, project_id, user_id):
         project = get_object_or_404(Project, id=project_id, creator=request.user)
-        invited_user = get_object_or_404(User, id=user_id)
-        message = request.POST.get('message', '').strip()
+        user = get_object_or_404(User, id=user_id)
+        
+        # Check if already a member
+        is_member = ProjectMembership.objects.filter(
+            project=project,
+            user=user
+        ).exists()
+        
+        if is_member:
+            messages.warning(request, f"{user.username} is already a member of this project.")
+            return redirect('projects:find_contributors', project_id=project_id)
+        
+        # Check if already invited
+        invitation_exists = Invitation.objects.filter(
+            project=project,
+            recipient=user,
+            status='pending'
+        ).exists()
+        
+        if invitation_exists:
+            messages.warning(request, f"{user.username} has already been invited to this project.")
+            return redirect('projects:find_contributors', project_id=project_id)
         
         # Create invitation
+        message = request.POST.get('message', '')
         Invitation.objects.create(
             project=project,
             sender=request.user,
-            recipient=invited_user,
+            recipient=user,
             message=message
         )
         
-        messages.success(request, f"Invitation sent to {invited_user.username}!")
+        messages.success(request, f"Invitation sent to {user.username}.")
         return redirect('projects:find_contributors', project_id=project_id)
 
 
-class SentInvitationsView(LoginRequiredMixin, View):
-    """View for listing invitations sent by the team leader"""
+class SentInvitationsView(LoginRequiredMixin, ListView):
+    """List view of sent invitations"""
+    template_name = 'projects/sent_invitations.html'
+    context_object_name = 'invitations'
+    paginate_by = 10
     
-    def get(self, request):
-        status_filter = request.GET.get('status', 'pending')
-        
-        # Set status filter
-        if status_filter not in ['pending', 'accepted', 'rejected', 'all']:
-            status_filter = 'pending'
-        
-        # Get invitations for user's projects
-        user_projects = Project.objects.filter(creator=request.user).values_list('id', flat=True)
-        
-        if status_filter == 'all':
-            invitations = Invitation.objects.filter(project_id__in=user_projects)
-        else:
-            invitations = Invitation.objects.filter(project_id__in=user_projects, status=status_filter)
-        
-        invitations = invitations.select_related('project', 'recipient').order_by('-created_at')
-        
-        # Paginate results
-        paginator = Paginator(invitations, 10)  # 10 invitations per page
-        page_number = request.GET.get('page', 1)
-        invitations_page = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'sent_invitations',
-            'invitations': invitations_page,
-            'invitation_status': status_filter,
-        }
-        
-        return render(request, 'dashboard/leader/sent_invitations.html', context)
+    def get_queryset(self):
+        return Invitation.objects.filter(sender=self.request.user).order_by('-created_at')
 
 
 class CancelInvitationView(LoginRequiredMixin, View):
-    """View for cancelling a sent invitation"""
+    """Cancel a sent invitation"""
     
     def post(self, request, invitation_id):
-        # Get invitation ensuring it's for the user's project
-        invitation = get_object_or_404(
-            Invitation,
-            id=invitation_id,
-            project__creator=request.user,
-            status='pending'
-        )
+        invitation = get_object_or_404(Invitation, id=invitation_id, sender=request.user)
         
-        # Delete the invitation
-        invitation.delete()
+        if invitation.status == 'pending':
+            invitation.delete()
+            messages.success(request, "Invitation canceled successfully.")
+        else:
+            messages.warning(request, "Cannot cancel an invitation that has already been responded to.")
         
-        messages.success(request, "Invitation cancelled successfully.")
         return redirect('projects:sent_invitations')
 
 
-class ApplicationsListView(LoginRequiredMixin, View):
-    """View for listing applications to the team leader's projects"""
+class ApplicationsListView(LoginRequiredMixin, ListView):
+    """List view of applications to user's projects"""
+    template_name = 'projects/applications_list.html'
+    context_object_name = 'applications'
+    paginate_by = 10
     
-    def get(self, request):
-        status_filter = request.GET.get('status', 'pending')
-        
-        # Set status filter
-        if status_filter not in ['pending', 'accepted', 'rejected', 'all']:
-            status_filter = 'pending'
-        
-        # Get applications for user's projects
-        user_projects = Project.objects.filter(creator=request.user).values_list('id', flat=True)
-        
-        if status_filter == 'all':
-            applications = Application.objects.filter(project_id__in=user_projects)
-        else:
-            applications = Application.objects.filter(project_id__in=user_projects, status=status_filter)
-        
-        applications = applications.select_related('project', 'applicant').order_by('-created_at')
-        
-        # Get pending count for notification badge
-        pending_count = Application.objects.filter(
-            project__creator=request.user,
-            status='pending'
-        ).count()
-        
-        # Paginate results
-        paginator = Paginator(applications, 10)  # 10 applications per page
-        page_number = request.GET.get('page', 1)
-        applications_page = paginator.get_page(page_number)
-        
-        context = {
-            'active_tab': 'applications',
-            'applications': applications_page,
-            'application_status': status_filter,
-            'pending_count': pending_count,
-        }
-        
-        return render(request, 'dashboard/leader/applications.html', context)
+    def get_queryset(self):
+        # Get applications for projects created by user
+        return Application.objects.filter(
+            project__creator=self.request.user
+        ).order_by('-created_at')
 
 
 class ViewApplicationView(LoginRequiredMixin, View):
-    """View for viewing and responding to an application"""
+    """View an application details"""
+    template_name = 'projects/view_application.html'
     
     def get(self, request, application_id):
-        # Get application ensuring it's for the user's project
         application = get_object_or_404(
             Application,
             id=application_id,
             project__creator=request.user
         )
         
-        context = {
-            'active_tab': 'applications',
-            'application': application,
-        }
+        # Get applicant's profile details
+        applicant = application.applicant
         
-        return render(request, 'dashboard/leader/view_application.html', context)
+        context = {
+            'application': application,
+            'applicant': applicant,
+            'tech_stack': applicant.profile.get_tech_stack_list() if hasattr(applicant, 'profile') else []
+        }
+        return render(request, self.template_name, context)
 
 
 class UpdateApplicationView(LoginRequiredMixin, View):
-    """View for updating an application status (accept/reject)"""
+    """Update application status"""
     
     def post(self, request, application_id):
-        # Get application ensuring it's for the user's project
         application = get_object_or_404(
             Application,
             id=application_id,
             project__creator=request.user
         )
         
-        status = request.POST.get('status')
+        action = request.POST.get('action')
         
-        if status not in ['accepted', 'rejected']:
-            messages.error(request, "Invalid status.")
-            return redirect('projects:view_application', application_id=application_id)
-        
-        # Update application status
-        application.status = status
-        application.save()
-        
-        if status == 'accepted':
+        if action == 'accept':
+            application.status = 'accepted'
+            application.save()
+            
             # Add applicant to project members
-            project = application.project
-            applicant = application.applicant
+            ProjectMembership.objects.create(
+                user=application.applicant,
+                project=application.project,
+                role='member'
+            )
             
-            # Check if already a member
-            if not ProjectMembership.objects.filter(project=project, user=applicant).exists():
-                ProjectMembership.objects.create(
-                    user=applicant,
-                    project=project,
-                    role='member'
-                )
-            
-            messages.success(request, f"Application accepted! {applicant.username} has been added to the project.")
-        else:
-            messages.info(request, "Application rejected.")
+            messages.success(request, f"{application.applicant.username} has been added to the project.")
+        
+        elif action == 'reject':
+            application.status = 'rejected'
+            application.save()
+            messages.info(request, f"Application from {application.applicant.username} has been rejected.")
         
         return redirect('projects:applications_list')
