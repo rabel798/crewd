@@ -26,22 +26,23 @@ class LoginView(FormView):
         return context
     
     def post(self, request, *args, **kwargs):
-        login_form = LoginForm(request.POST)
-        if login_form.is_valid():
-            user = authenticate(
-                username=login_form.cleaned_data.get('username'),
-                password=login_form.cleaned_data.get('password')
-            )
-            if user is not None and user.is_active:
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
                 login(request, user)
                 messages.success(request, 'Login successful!')
                 if not user.role:
                     return redirect('accounts:role_selection')
                 return redirect('dashboard')
             else:
-                messages.error(request, 'Invalid username or password.')
+                messages.error(request, 'Invalid email or password.')
+        else:
+            messages.error(request, 'Please correct the errors below.')
         return render(request, self.template_name, {
-            'login_form': login_form,
+            'login_form': form,
             'register_form': RegisterForm(),
             'tech_choices': TECH_CHOICES
         })
