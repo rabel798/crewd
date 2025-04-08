@@ -38,7 +38,7 @@ class Project(models.Model):
         ('cancelled', 'Cancelled'),
     ], default='active')
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now())
     
     def get_required_skills_list(self):
         return self.required_skills.split(',') if self.required_skills else []
