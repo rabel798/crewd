@@ -331,7 +331,7 @@ class MyContributionsView(LoginRequiredMixin, ListView):
 class GroupsListView(LoginRequiredMixin, ListView):
     """View for listing all groups a user is part of"""
     model = GroupMembership
-    template_name = 'dashboard/groups_list.html'
+    template_name = 'dashboard/applicant/groups.html'
     context_object_name = 'memberships'
     paginate_by = 10
     
@@ -460,7 +460,7 @@ class CreateProjectView(LoginRequiredMixin, CreateView):
     """View for creating a new project"""
     model = Project
     form_class = ProjectForm
-    template_name = 'dashboard/create_project.html'
+    template_name = 'dashboard/leader/create_project.html'
     success_url = reverse_lazy('projects:my_projects')
     
     def dispatch(self, request, *args, **kwargs):
@@ -655,7 +655,7 @@ class InviteContributorView(LoginRequiredMixin, View):
 class SentInvitationsView(LoginRequiredMixin, ListView):
     """View for listing all invitations sent by a team leader"""
     model = Invitation
-    template_name = 'dashboard/sent_invitations.html'
+    template_name = 'dashboard/leader/sent_invitations.html'
     context_object_name = 'invitations'
     paginate_by = 10
     
@@ -690,7 +690,7 @@ class CancelInvitationView(LoginRequiredMixin, View):
 class ApplicationsListView(LoginRequiredMixin, ListView):
     """View for listing all applications to a team leader's projects"""
     model = Application
-    template_name = 'dashboard/applications_list.html'
+    template_name = 'dashboard/leader/applications.html'
     context_object_name = 'applications'
     paginate_by = 10
     
