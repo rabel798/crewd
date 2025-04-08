@@ -5,7 +5,7 @@ from .models import TECH_CHOICES
 
 User = get_user_model()
 
-class LoginForm(AuthenticationForm):
+class LoginForm(forms.Form):
     """Custom login form"""
     username = forms.EmailField(
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter your email'}),

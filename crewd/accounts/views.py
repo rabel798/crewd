@@ -30,20 +30,24 @@ class LoginView(FormView):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            # Try authenticating with email as username
+            user = authenticate(request, username=username, password=password)
+            if user is None:
+                # Try getting user by email and authenticate with username
+                try:
+                    user_obj = User.objects.get(email=username)
+                    user = authenticate(request, username=user_obj.username, password=password)
+                except User.DoesNotExist:
+                    user = None
+            
             if user is not None:
                 login(request, user)
                 messages.success(request, 'Login successful!')
                 if not user.role:
                     return redirect('accounts:role_selection')
-                return redirect('dashboard')
+                return redirect('projects:dashboard')
             else:
-                form.add_error('password', 'Invalid email or password combination')
-        
-        # Add specific error messages from form validation
-        for field in form.errors:
-            for error in form.errors[field]:
-                messages.error(request, f"{field}: {error}")
+                messages.error(request, 'Invalid email or password combination')
         
         return render(request, self.template_name, {
             'login_form': form,
