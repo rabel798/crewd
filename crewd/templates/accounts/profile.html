@@ -47,7 +47,7 @@
                         <div>
                             <label>
                                 <input type="checkbox" name="tech_stack" value="{{ tech }}"
-                                       {% if tech in user.tech_stack|split:',' %}checked{% endif %}>
+                                       {% if tech in user.get_tech_stack_list %}checked{% endif %}>
                                 {{ tech }}
                             </label>
                         </div>
