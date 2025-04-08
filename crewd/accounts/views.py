@@ -25,20 +25,26 @@ class LoginView(FormView):
         context['tech_choices'] = TECH_CHOICES
         return context
     
-    def form_valid(self, form):
-        user = authenticate(
-            username=form.cleaned_data.get('username'),
-            password=form.cleaned_data.get('password')
-        )
-        if user is not None and user.is_active:
-            login(self.request, user)
-            messages.success(self.request, 'Login successful!')
-            if not user.role:
-                return redirect('accounts:role_selection')
-            return redirect('dashboard')
-        else:
-            messages.error(self.request, 'Invalid email or password. Please try again.')
-            return self.render_to_response(self.get_context_data())
+    def post(self, request, *args, **kwargs):
+        login_form = LoginForm(request.POST)
+        if login_form.is_valid():
+            user = authenticate(
+                username=login_form.cleaned_data.get('username'),
+                password=login_form.cleaned_data.get('password')
+            )
+            if user is not None and user.is_active:
+                login(request, user)
+                messages.success(request, 'Login successful!')
+                if not user.role:
+                    return redirect('accounts:role_selection')
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid username or password.')
+        return render(request, self.template_name, {
+            'login_form': login_form,
+            'register_form': RegisterForm(),
+            'tech_choices': TECH_CHOICES
+        })
 
 class RegisterView(FormView):
     """View for user registration"""
