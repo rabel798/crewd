@@ -38,9 +38,13 @@ class LoginView(FormView):
                     return redirect('accounts:role_selection')
                 return redirect('dashboard')
             else:
-                messages.error(request, 'Invalid email or password.')
-        else:
-            messages.error(request, 'Please correct the errors below.')
+                form.add_error('password', 'Invalid email or password combination')
+        
+        # Add specific error messages from form validation
+        for field in form.errors:
+            for error in form.errors[field]:
+                messages.error(request, f"{field}: {error}")
+        
         return render(request, self.template_name, {
             'login_form': form,
             'register_form': RegisterForm(),
