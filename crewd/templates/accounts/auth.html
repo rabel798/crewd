@@ -3,11 +3,15 @@
 {% block title %}Sign In / Register - Crewd{% endblock %}
 
 {% block content %}
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; padding: 3rem 0;">
-    <!-- Login Form -->
-    <div class="glass-card" style="width: 450px;">
-        <h2 style="margin-bottom: 1.5rem; color: #4B4ACF;">Sign In</h2>
-        <form method="post" action="{% url 'accounts:login' %}">
+<div id="authContainer">
+    <div class="glass-card" style="max-width: 500px; margin: 0 auto; padding: 30px;">
+        <div class="auth-tabs">
+            <div id="loginTab" class="auth-tab active">Sign In</div>
+            <div id="registerTab" class="auth-tab">Create Account</div>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="loginForm" method="post" action="{% url 'accounts:login' %}" class="auth-form">
             {% csrf_token %}
             <div class="form-group">
                 <label for="id_username">Email:</label>
@@ -25,12 +29,9 @@
             </div>
             <button type="submit" class="btn" style="width: 100%;">Sign In</button>
         </form>
-    </div>
-    
-    <!-- Registration Form -->
-    <div class="glass-card" style="width: 450px;">
-        <h2 style="margin-bottom: 1.5rem; color: #4B4ACF;">Create Account</h2>
-        <form method="post" action="{% url 'accounts:register' %}" enctype="multipart/form-data">
+        
+        <!-- Registration Form (initially hidden) -->
+        <form id="registerForm" method="post" action="{% url 'accounts:register' %}" class="auth-form" style="display: none;" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
                 <label for="id_username">Username:</label>
@@ -79,4 +80,38 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        // Tab switching functionality
+        loginTab.addEventListener('click', function() {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+        });
+        
+        registerTab.addEventListener('click', function() {
+            registerTab.classList.add('active');
+            loginTab.classList.remove('active');
+            registerForm.style.display = 'block';
+            loginForm.style.display = 'none';
+        });
+        
+        // Check URL to determine which tab to show initially
+        const url = window.location.href;
+        if (url.includes('register')) {
+            registerTab.click();
+        } else {
+            loginTab.click();
+        }
+    });
+</script>
 {% endblock %}

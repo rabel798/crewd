@@ -7,10 +7,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from projects.views import DashboardView
+import sys
+import os
+
+# Add the parent directory to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from views import index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name='index.html'), name='index'),
+    path('', index, name='index'),
     path('accounts/', include('accounts.urls')),
     path('projects/', include('projects.urls')),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),

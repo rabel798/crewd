@@ -1,29 +1,52 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/animations.css">
+{% endblock %}
+
 {% block title %}Crewd - Connect. Collaborate. Create.{% endblock %}
 
 {% block content %}
-<div style="text-align: center; padding: 4rem 0;">
-    <h1 style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(to right, #4B4ACF, #40E0D0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome to Crewd</h1>
-    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto;">Building teams that transform ideas into reality. Connect with talented individuals or find your next project.</p>
+<!-- Logo Animation Container (initially centered) -->
+<div id="logoContainer" class="logo-container centered">
+    <svg width="200" height="200" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="flameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#40E0D0" />
+                <stop offset="100%" stop-color="#FFFFFF" />
+            </linearGradient>
+        </defs>
+        
+        <!-- Flame path -->
+        <g id="flame" class="flame" transform="translate(200, 100) scale(1.2)">
+            <path d="M180 120 C 180 120, 300 10, 250 140 C 250 140, 350 100, 300 180 C 300 180, 400 150, 330 270 C 330 270, 400 230, 330 340 C 330 340, 360 320, 300 380 C 300 380, 330 350, 270 400 C 270 400, 280 370, 240 390 C 240 390, 180 450, 160 350 C 160 350, 130 400, 150 320 C 150 320, 120 360, 140 280 C 140 280, 100 330, 140 220 C 140 220, 80 270, 150 160 C 150 160, 100 170, 180 120" 
+                fill="url(#flameGradient)" />
+        </g>
+        
+        <!-- Text "crewd" -->
+        <text id="logoText" x="400" y="600" font-family="Arial, sans-serif" font-size="110" text-anchor="middle" fill="#FFFFFF">crewd</text>
+    </svg>
+</div>
+
+<!-- Welcome Content (shown initially) -->
+<div id="welcomeContent" class="welcome-content">
+    <h1 class="welcome-headline">Welcome to Crewd</h1>
+    <p class="welcome-subheading">Building teams that transform ideas into reality. Connect with talented individuals or find your next project.</p>
     
     <div class="glass-card" style="max-width: 800px; margin: 0 auto 4rem auto; text-align: left; display: flex; justify-content: space-between; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 250px; padding: 1rem;">
             <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Team Applicants</h3>
             <p>Find exciting projects that match your skills and interests. Apply to join teams and collaborate on innovative ideas.</p>
-            <a href="{% url 'accounts:register' %}" class="btn" style="margin-top: 1rem;">Join as Applicant</a>
         </div>
         
         <div style="flex: 1; min-width: 250px; padding: 1rem;">
             <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Team Leaders</h3>
             <p>Create projects and find the perfect team members. Lead talented individuals to bring your vision to life.</p>
-            <a href="{% url 'accounts:register' %}" class="btn" style="margin-top: 1rem;">Join as Team Leader</a>
         </div>
         
         <div style="flex: 1; min-width: 250px; padding: 1rem;">
             <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Companies</h3>
             <p>Post projects and find skilled teams. Connect with top talent to complete your company's initiatives.</p>
-            <a href="{% url 'accounts:register' %}" class="btn" style="margin-top: 1rem;">Join as Company</a>
         </div>
     </div>
     
@@ -49,6 +72,121 @@
         </div>
     </div>
     
-    <a href="{% url 'accounts:register' %}" class="btn" style="font-size: 1.2rem; padding: 15px 30px;">Get Started Today</a>
+    <button id="getStartedBtn" class="btn welcome-cta" style="font-size: 1.2rem; padding: 15px 30px;">Get Started Today</button>
 </div>
+
+<!-- Auth Container (initially hidden) -->
+<div id="authContainer" class="auth-container">
+    <div class="glass-card" style="max-width: 500px; margin: 0 auto; padding: 30px;">
+        <div class="auth-tabs">
+            <div id="loginTab" class="auth-tab active">Sign In</div>
+            <div id="registerTab" class="auth-tab">Create Account</div>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="loginForm" method="post" action="{% url 'accounts:login' %}" class="auth-form visible">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Email:</label>
+                <input type="email" name="username" id="id_username" class="form-control" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="id_password">Password:</label>
+                <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Sign In</button>
+        </form>
+        
+        <!-- Registration Form (initially hidden) -->
+        <form id="registerForm" method="post" action="{% url 'accounts:register' %}" class="auth-form" style="display: none;" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_reg_username">Username:</label>
+                <input type="text" name="username" id="id_reg_username" class="form-control" placeholder="Choose a username" required minlength="3" maxlength="80">
+            </div>
+            <div class="form-group">
+                <label for="id_reg_email">Email:</label>
+                <input type="email" name="email" id="id_reg_email" class="form-control" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="id_reg_password1">Password:</label>
+                <input type="password" name="password1" id="id_reg_password1" class="form-control" placeholder="Choose a password" required>
+            </div>
+            <div class="form-group">
+                <label for="id_reg_password2">Confirm Password:</label>
+                <input type="password" name="password2" id="id_reg_password2" class="form-control" placeholder="Confirm your password" required>
+            </div>
+            <div class="form-group">
+                <label for="id_profile_picture">Profile Picture (optional):</label>
+                <input type="file" name="profile_picture" id="id_profile_picture" class="form-control">
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Create Account</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoContainer = document.getElementById('logoContainer');
+        const welcomeContent = document.getElementById('welcomeContent');
+        const authContainer = document.getElementById('authContainer');
+        const getStartedBtn = document.getElementById('getStartedBtn');
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        // Initialize with login tab active
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        
+        // Tab switching functionality
+        loginTab.addEventListener('click', function() {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+        });
+        
+        registerTab.addEventListener('click', function() {
+            registerTab.classList.add('active');
+            loginTab.classList.remove('active');
+            registerForm.style.display = 'block';
+            loginForm.style.display = 'none';
+        });
+        
+        // Get Started button click - start animation sequence
+        getStartedBtn.addEventListener('click', function() {
+            // Start fade out of welcome content
+            welcomeContent.classList.add('fade-out');
+            
+            // After content fades out, move logo to corner
+            setTimeout(function() {
+                welcomeContent.style.display = 'none';
+                
+                // Animate logo to corner
+                logoContainer.style.animation = 'logoMoveToCorner 1.5s ease-in-out forwards';
+                
+                // After logo moves to corner, show auth forms
+                setTimeout(function() {
+                    logoContainer.classList.remove('centered');
+                    logoContainer.classList.add('corner');
+                    
+                    // Show auth container
+                    authContainer.classList.add('visible');
+                    
+                    // Reset logo animation to ensure it keeps running
+                    const flame = document.getElementById('flame');
+                    flame.classList.remove('flame');
+                    void flame.offsetWidth; // Force reflow
+                    flame.classList.add('flame');
+                }, 1500);
+            }, 1000);
+        });
+    });
+</script>
 {% endblock %}
