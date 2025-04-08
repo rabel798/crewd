@@ -2,16 +2,18 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
-# Define tech stack choices
+# List of technology choices for tech stack selection
 TECH_CHOICES = [
-    'Python', 'Django', 'Flask', 'JavaScript', 'React', 'Vue', 'Angular', 
-    'Node.js', 'Express', 'HTML/CSS', 'Bootstrap', 'Tailwind CSS', 
-    'PHP', 'Laravel', 'CodeIgniter', 'Ruby', 'Ruby on Rails', 
-    'Java', 'Spring', 'C#', '.NET', 'Go', 'Rust', 'Swift', 'Kotlin',
-    'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Firebase',
+    'Python', 'JavaScript', 'TypeScript', 'Java', 'C#', 'C++',
+    'PHP', 'Ruby', 'Swift', 'Kotlin', 'Go', 'Rust',
+    'React', 'Angular', 'Vue', 'Node.js', 'Django', 'Flask',
+    'Spring', 'Express', 'Laravel', 'Ruby on Rails',
+    'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'SQLite',
     'Docker', 'Kubernetes', 'AWS', 'Azure', 'Google Cloud',
-    'GraphQL', 'REST API', 'WebSockets', 'Microservices', 
-    'Machine Learning', 'Data Science', 'UI/UX Design', 'Mobile Development'
+    'HTML/CSS', 'TailwindCSS', 'Bootstrap', 'SASS',
+    'Git', 'CI/CD', 'Agile', 'Scrum',
+    'Mobile Development', 'Web Development', 'Desktop Applications',
+    'Machine Learning', 'AI', 'Data Science', 'DevOps', 'UI/UX Design'
 ]
 
 class User(AbstractUser):
@@ -30,7 +32,7 @@ class User(AbstractUser):
         """Return tech stack as a list"""
         if not self.tech_stack:
             return []
-        return [tech.strip() for tech in self.tech_stack.split(',')]
+        return [tech.strip() for tech in self.tech_stack.split(',') if tech.strip()]
     
     def __str__(self):
         return self.username

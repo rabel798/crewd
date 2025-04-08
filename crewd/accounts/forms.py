@@ -1,9 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import get_user_model
-from .models import TECH_CHOICES
-
-User = get_user_model()
+from django.core.validators import FileExtensionValidator
+from .models import User, TECH_CHOICES
 
 class LoginForm(AuthenticationForm):
     """Custom login form"""
@@ -15,6 +13,11 @@ class LoginForm(AuthenticationForm):
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter your password'}),
         label='Password'
     )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'password')
+
 
 class RegisterForm(UserCreationForm):
     """Custom registration form"""
@@ -36,12 +39,14 @@ class RegisterForm(UserCreationForm):
     )
     profile_picture = forms.ImageField(
         widget=forms.FileInput(attrs={'class': 'form-control'}),
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
         required=False
     )
     
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2', 'profile_picture')
+        
 
 class ProfileForm(forms.ModelForm):
     """Form for updating user profile"""
@@ -55,9 +60,15 @@ class ProfileForm(forms.ModelForm):
     )
     profile_picture = forms.ImageField(
         widget=forms.FileInput(attrs={'class': 'form-control'}),
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+        required=False
+    )
+    tech_stack = forms.MultipleChoiceField(
+        choices=[(tech, tech) for tech in TECH_CHOICES],
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'tech-checkbox'}),
         required=False
     )
     
     class Meta:
         model = User
-        fields = ('username', 'email', 'profile_picture')
+        fields = ('username', 'email', 'profile_picture', 'tech_stack')
