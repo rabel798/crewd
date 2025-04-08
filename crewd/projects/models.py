@@ -128,3 +128,25 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message by {self.sender.username} in {self.group.name}"
+
+class Invitation(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='invitations')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_invitations')
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_invitations')
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('accepted', 'Accepted'),
+            ('rejected', 'Rejected'),
+        ],
+        default='pending'
+    )
+    message = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('project', 'recipient')
+
+    def __str__(self):
+        return f"Invitation for {self.recipient.username} to {self.project.title}"
