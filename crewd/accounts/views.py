@@ -30,14 +30,15 @@ class LoginView(FormView):
             username=form.cleaned_data.get('username'),
             password=form.cleaned_data.get('password')
         )
-        if user is not None:
+        if user is not None and user.is_active:
             login(self.request, user)
+            messages.success(self.request, 'Login successful!')
             if not user.role:
                 return redirect('accounts:role_selection')
             return redirect('dashboard')
         else:
-            messages.error(self.request, 'Invalid email or password')
-            return self.form_invalid(form)
+            messages.error(self.request, 'Invalid email or password. Please try again.')
+            return self.render_to_response(self.get_context_data())
 
 class RegisterView(FormView):
     """View for user registration"""

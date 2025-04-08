@@ -19,6 +19,13 @@
             <!-- Login Form -->
             <form id="loginForm" method="post" action="{% url 'accounts:login' %}" class="auth-form">
                 {% csrf_token %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
                 <div class="form-group">
                     <label for="id_username">Email:</label>
                     {{ login_form.username }}
