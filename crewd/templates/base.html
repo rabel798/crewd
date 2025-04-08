@@ -44,8 +44,8 @@
         }
         
         .navbar {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
+            background: white;
+            color: var(--primary-color);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
@@ -57,7 +57,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             text-decoration: none;
-            color: white;
+            color: var(--primary-color);
             display: flex;
             align-items: center;
         }
@@ -72,7 +72,7 @@
         }
         
         .navbar .nav-links a {
-            color: white;
+            color: var(--primary-color);
             text-decoration: none;
             transition: 0.3s;
         }
@@ -173,10 +173,17 @@
         }
         
         .navbar-logo {
-            height: 35px;
+            height: 45px;
             margin-right: 10px;
             background: transparent;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
         }
     </style>
     <!-- Import Google Fonts -->
