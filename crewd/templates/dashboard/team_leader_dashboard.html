@@ -2,214 +2,133 @@
 {% load static %}
 
 {% block content %}
-<div class="dashboard-container">
-    <!-- Vertical Navigation Bar -->
-    <div class="vertical-nav">
-        <div class="logo-container">
-            <img src="{% static 'img/logo.jpg' %}" alt="Crewd Logo" class="logo">
-        </div>
-        
-        <div class="user-info">
-            {% if user.profile.profile_picture %}
-                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="avatar">
-            {% else %}
-                <img src="{% static 'img/default-avatar.svg' %}" alt="{{ user.username }}" class="avatar">
-            {% endif %}
-            <h3>{{ user.username }}</h3>
-            <p class="role-badge">Team Leader</p>
-        </div>
-        
-        <ul class="nav-links">
-            <li class="{% if active_tab == 'dashboard' %}active{% endif %}">
-                <a href="{% url 'projects:team_leader_dashboard' %}">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-            </li>
-            <li class="{% if active_tab == 'my_projects' %}active{% endif %}">
-                <a href="{% url 'projects:my_projects' %}">
-                    <i class="fas fa-project-diagram"></i> My Projects
-                </a>
-            </li>
-            <li class="{% if active_tab == 'create_project' %}active{% endif %}">
-                <a href="{% url 'projects:create_project' %}">
-                    <i class="fas fa-plus-circle"></i> Create Project
-                </a>
-            </li>
-            <li class="{% if active_tab == 'applications' %}active{% endif %}">
-                <a href="{% url 'projects:applications_list' %}">
-                    <i class="fas fa-user-check"></i> Applications
-                    {% if pending_applications_count > 0 %}
-                        <span class="badge badge-notification">{{ pending_applications_count }}</span>
-                    {% endif %}
-                </a>
-            </li>
-            <li class="{% if active_tab == 'sent_invitations' %}active{% endif %}">
-                <a href="{% url 'projects:sent_invitations' %}">
-                    <i class="fas fa-paper-plane"></i> Sent Invitations
-                </a>
-            </li>
-            <li class="{% if active_tab == 'find_contributors' %}active{% endif %}">
-                <a href="{% url 'projects:contributors_list' %}">
-                    <i class="fas fa-search"></i> Find Contributors
-                </a>
-            </li>
-        </ul>
-        
-        <div class="nav-footer">
-            <a href="{% url 'projects:switch_role' %}" class="switch-role-btn">
-                <i class="fas fa-exchange-alt"></i> Switch to Applicant
-            </a>
-            <a href="{% url 'logout' %}" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
-    
-    <!-- Main Content Area -->
-    <div class="main-content">
-        <div class="content-header">
-            <h1>Welcome, {{ user.username }}!</h1>
-            <p>Manage your projects and team</p>
-        </div>
-        
-        <!-- Dashboard Widgets -->
-        <div class="widgets-container">
-            <!-- Project Creation CTA -->
-            {% if not user_projects %}
-            <div class="widget widget-large cta-widget">
-                <div class="widget-content">
-                    <div class="cta-content">
-                        <div class="cta-icon">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <div class="cta-text">
-                            <h2>Start Your First Project</h2>
-                            <p>Create a project to find the right team members with the skills you need.</p>
-                            <a href="{% url 'projects:create_project' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus-circle"></i> Create Project
-                            </a>
-                        </div>
-                    </div>
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Welcome, {{ user.username }}!</h3>
+                    <p class="text-muted">You are in <span class="badge bg-primary">Team Leader Mode</span></p>
+                    <p>Create projects, manage your teams, and find contributors with the right skills.</p>
+                    <a href="{% url 'projects:create_project' %}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus-circle me-2"></i> Create New Project
+                    </a>
                 </div>
             </div>
-            {% endif %}
             
-            <!-- Projects Overview -->
-            {% if user_projects %}
-            <div class="widget widget-large">
-                <div class="widget-header">
-                    <h2>Your Projects</h2>
-                    <a href="{% url 'projects:my_projects' %}" class="view-all">View All</a>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My Projects</h5>
+                    <a href="{% url 'projects:my_projects' %}" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
-                <div class="widget-content">
-                    <div class="projects-grid">
-                        {% for project in user_projects %}
-                        <div class="project-card">
-                            <div class="project-header">
-                                <h3>{{ project.title }}</h3>
-                                <span class="status-badge status-{{ project.status }}">{{ project.status|title }}</span>
-                            </div>
-                            <p class="project-desc">{{ project.description|truncatechars:120 }}</p>
-                            <div class="project-meta">
-                                <span><i class="fas fa-users"></i> Team: {{ project.team_size }}</span>
-                                <span><i class="fas fa-clock"></i> {{ project.duration }}</span>
-                            </div>
-                            <div class="project-skills">
-                                {% for skill in project.get_required_skills_list %}
-                                <span class="skill-tag">{{ skill }}</span>
-                                {% endfor %}
-                            </div>
-                            <a href="{% url 'projects:manage_project' project.id %}" class="btn btn-primary">Manage</a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Recent Applications -->
-            <div class="widget widget-medium">
-                <div class="widget-header">
-                    <h2>Recent Applications</h2>
-                    <a href="{% url 'projects:applications_list' %}" class="view-all">View All</a>
-                </div>
-                <div class="widget-content">
-                    {% if recent_applications %}
-                    <div class="applications-list">
-                        {% for application in recent_applications %}
-                        <div class="application-item">
-                            <div class="applicant-info">
-                                {% if application.applicant.profile.profile_picture %}
-                                    <img src="{{ application.applicant.profile.profile_picture.url }}" alt="{{ application.applicant.username }}" class="applicant-avatar">
-                                {% else %}
-                                    <img src="{% static 'img/default-avatar.svg' %}" alt="{{ application.applicant.username }}" class="applicant-avatar">
-                                {% endif %}
-                                <div>
-                                    <h3>{{ application.applicant.username }}</h3>
-                                    <p>Applied to: {{ application.project.title }}</p>
-                                    <span class="application-date">{{ application.created_at|date:"M d, Y" }}</span>
+                <div class="card-body">
+                    {% if user_projects %}
+                        <div class="row">
+                            {% for project in user_projects %}
+                            <div class="col-lg-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ project.title }}</h5>
+                                        <span class="badge {% if project.status == 'active' %}bg-success{% elif project.status == 'completed' %}bg-info{% else %}bg-danger{% endif %} mb-2">
+                                            {{ project.status|title }}
+                                        </span>
+                                        <p class="card-text">{{ project.description|truncatechars:100 }}</p>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <small class="text-muted"><i class="fas fa-users me-1"></i> {{ project.memberships.count }}/{{ project.team_size }}</small>
+                                            <small class="text-muted"><i class="fas fa-clock me-1"></i> {{ project.duration }}</small>
+                                        </div>
+                                        
+                                        <div class="progress mb-3" style="height: 8px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                style="width: {{ project.memberships.count|floatformat:0|cut:" " }}0%;" 
+                                                aria-valuenow="{{ project.memberships.count }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="{{ project.team_size }}"></div>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{% url 'projects:manage_project' project.id %}" class="btn btn-sm btn-primary">Manage</a>
+                                            <a href="{% url 'projects:find_contributors' project.id %}" class="btn btn-sm btn-outline-primary">Find Contributors</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="application-status status-{{ application.status }}">
-                                {{ application.status|title }}
-                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
                     {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-user-check empty-icon"></i>
-                        <p>No applications yet. Create projects to attract team members.</p>
-                        <a href="{% url 'projects:create_project' %}" class="btn btn-primary">Create Project</a>
-                    </div>
+                        <div class="text-center p-4">
+                            <i class="fas fa-project-diagram fs-1 text-muted mb-3"></i>
+                            <h4>No projects created yet</h4>
+                            <p class="text-muted">Start by creating your first project.</p>
+                            <a href="{% url 'projects:create_project' %}" class="btn btn-primary">Create Project</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Applications</h5>
+                    <a href="{% url 'projects:applications_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                        <div class="list-group list-group-flush">
+                            {% for application in recent_applications %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ application.project.title }}</h6>
+                                    <span class="badge {% if application.status == 'accepted' %}bg-success{% elif application.status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %}">
+                                        {{ application.status|title }}
+                                    </span>
+                                </div>
+                                <p class="mb-1 small">From: {{ application.applicant.username }}</p>
+                                <small class="text-muted d-block mb-2">Applied {{ application.created_at|date:"M d, Y" }}</small>
+                                {% if application.status == 'pending' %}
+                                <a href="{% url 'projects:view_application' application.id %}" class="btn btn-sm btn-primary">Review</a>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <p class="text-muted">No applications received yet.</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
             
-            <!-- Stats Widget -->
-            <div class="widget widget-small">
-                <div class="widget-header">
-                    <h2>Quick Stats</h2>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Quick Stats</h5>
                 </div>
-                <div class="widget-content">
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value">{{ user_projects|length }}</span>
-                            <span class="stat-label">Total Projects</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">{{ pending_applications_count }}</span>
-                            <span class="stat-label">Pending Applications</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">{{ user.get_tech_stack_list|length }}</span>
-                            <span class="stat-label">Tech Skills</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Tech Stack Analysis Widget -->
-            <div class="widget widget-large">
-                <div class="widget-header">
-                    <h2>Tech Stack Analysis</h2>
-                </div>
-                <div class="widget-content">
-                    <div class="tech-analysis-form">
-                        <p>Use Grok AI to analyze your project requirements and suggest the best tech stack.</p>
-                        <form id="tech-analyzer-form" method="post" action="{% url 'projects:analyze_tech_stack' %}">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="project-description">Project Description</label>
-                                <textarea id="project-description" name="description" rows="4" placeholder="Describe your project requirements in detail..." class="form-control"></textarea>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 border bg-light rounded text-center">
+                                <h3 class="mb-0">{{ user_projects.count }}</h3>
+                                <small class="text-muted">Projects</small>
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-brain"></i> Analyze with Grok
-                            </button>
-                        </form>
-                        <div id="analysis-results" class="analysis-results" style="display: none;">
-                            <h3>Suggested Tech Stack</h3>
-                            <div id="tech-suggestions" class="tech-suggestions"></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border bg-light rounded text-center">
+                                <h3 class="mb-0">{{ total_team_members }}</h3>
+                                <small class="text-muted">Team Members</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border bg-light rounded text-center">
+                                <h3 class="mb-0">{{ pending_applications }}</h3>
+                                <small class="text-muted">Pending Applications</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border bg-light rounded text-center">
+                                <h3 class="mb-0">{{ pending_invitations }}</h3>
+                                <small class="text-muted">Pending Invitations</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -217,701 +136,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Tech Stack Analysis
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('tech-analyzer-form');
-        const resultsContainer = document.getElementById('analysis-results');
-        const suggestionsContainer = document.getElementById('tech-suggestions');
-        
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Show loading state
-                suggestionsContainer.innerHTML = '<div class="loading">Analyzing with Grok AI...</div>';
-                resultsContainer.style.display = 'block';
-                
-                // Get form data
-                const formData = new FormData(form);
-                
-                // Send Ajax request
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Clear loading state
-                    suggestionsContainer.innerHTML = '';
-                    
-                    // Create elements for each tech
-                    if (data.tech_stack && data.tech_stack.length > 0) {
-                        data.tech_stack.forEach(tech => {
-                            const techEl = document.createElement('div');
-                            techEl.className = 'tech-item';
-                            techEl.innerHTML = `
-                                <span class="tech-name">${tech}</span>
-                            `;
-                            suggestionsContainer.appendChild(techEl);
-                        });
-                    } else {
-                        suggestionsContainer.innerHTML = '<p>No specific technologies suggested. Try a more detailed description.</p>';
-                    }
-                })
-                .catch(error => {
-                    suggestionsContainer.innerHTML = '<p class="error">An error occurred during analysis. Please try again.</p>';
-                    console.error('Error:', error);
-                });
-            });
-        }
-    });
-</script>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard Layout */
-    .dashboard-container {
-        display: flex;
-        min-height: 100vh;
-        background-color: #f7f9fc;
-    }
-    
-    /* Vertical Navigation */
-    .vertical-nav {
-        width: 280px;
-        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
-        color: white;
-        padding: 25px 0;
-        position: fixed;
-        height: 100vh;
-        overflow-y: auto;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .logo-container {
-        text-align: center;
-        padding: 10px 20px 30px;
-    }
-    
-    .logo {
-        max-width: 120px;
-        height: auto;
-    }
-    
-    .user-info {
-        text-align: center;
-        padding: 0 20px 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        margin-bottom: 20px;
-    }
-    
-    .avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid white;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 10px;
-    }
-    
-    .user-info h3 {
-        margin: 0 0 5px;
-        font-size: 1.2rem;
-    }
-    
-    .role-badge {
-        display: inline-block;
-        background-color: rgba(255, 255, 255, 0.2);
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin: 0;
-    }
-    
-    .nav-links {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        flex-grow: 1;
-    }
-    
-    .nav-links li {
-        margin-bottom: 5px;
-    }
-    
-    .nav-links li a {
-        display: flex;
-        align-items: center;
-        padding: 12px 25px;
-        color: white;
-        text-decoration: none;
-        transition: all 0.2s;
-        font-weight: 500;
-        position: relative;
-    }
-    
-    .nav-links li a i {
-        margin-right: 12px;
-        font-size: 1.1rem;
-        width: 20px;
-        text-align: center;
-    }
-    
-    .nav-links li.active a, 
-    .nav-links li a:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-    }
-    
-    .badge-notification {
-        background-color: #FF5757;
-        color: white;
-        font-size: 0.7rem;
-        border-radius: 50%;
-        padding: 2px 6px;
-        position: absolute;
-        right: 15px;
-    }
-    
-    .nav-footer {
-        padding: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .switch-role-btn, 
-    .logout-btn {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        text-align: center;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        transition: all 0.2s;
-    }
-    
-    .switch-role-btn {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-    
-    .logout-btn {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .switch-role-btn:hover, 
-    .logout-btn:hover {
-        background-color: rgba(255, 255, 255, 0.3);
-    }
-    
-    /* Main Content */
-    .main-content {
-        flex: 1;
-        padding: 30px;
-        margin-left: 280px;
-    }
-    
-    .content-header {
-        margin-bottom: 30px;
-    }
-    
-    .content-header h1 {
-        font-size: 1.8rem;
-        margin: 0 0 10px;
-        color: #333;
-    }
-    
-    .content-header p {
-        margin: 0;
-        color: #666;
-    }
-    
-    /* Widgets */
-    .widgets-container {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-gap: 25px;
-    }
-    
-    .widget {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 12px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-    
-    .widget-large {
-        grid-column: span 4;
-    }
-    
-    .widget-medium {
-        grid-column: span 2;
-    }
-    
-    .widget-small {
-        grid-column: span 2;
-    }
-    
-    .widget-header {
-        padding: 15px 20px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    
-    .widget-header h2 {
-        font-size: 1.2rem;
-        margin: 0;
-        color: #333;
-    }
-    
-    .view-all {
-        font-size: 0.9rem;
-        color: #4B4ACF;
-        text-decoration: none;
-    }
-    
-    .widget-content {
-        padding: 20px;
-    }
-    
-    /* CTA Widget */
-    .cta-widget {
-        background: linear-gradient(135deg, rgba(75, 74, 207, 0.1) 0%, rgba(64, 224, 208, 0.1) 100%);
-    }
-    
-    .cta-content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 30px;
-        padding: 20px;
-    }
-    
-    .cta-icon {
-        font-size: 4rem;
-        color: #4B4ACF;
-        background: white;
-        height: 120px;
-        width: 120px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 20px rgba(75, 74, 207, 0.2);
-    }
-    
-    .cta-text {
-        max-width: 500px;
-    }
-    
-    .cta-text h2 {
-        font-size: 1.8rem;
-        margin: 0 0 10px;
-        color: #333;
-    }
-    
-    .cta-text p {
-        margin: 0 0 20px;
-        color: #666;
-        font-size: 1.1rem;
-    }
-    
-    .btn-lg {
-        padding: 12px 24px;
-        font-size: 1.1rem;
-    }
-    
-    /* Projects Grid */
-    .projects-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        grid-gap: 20px;
-    }
-    
-    .project-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
-        padding: 15px;
-        border: 1px solid #eee;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .project-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 10px;
-    }
-    
-    .project-header h3 {
-        font-size: 1.1rem;
-        margin: 0;
-        color: #333;
-    }
-    
-    .status-badge {
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-    
-    .status-active {
-        background-color: #28a745;
-        color: white;
-    }
-    
-    .status-completed {
-        background-color: #17a2b8;
-        color: white;
-    }
-    
-    .status-cancelled {
-        background-color: #dc3545;
-        color: white;
-    }
-    
-    .project-desc {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 15px;
-        flex-grow: 1;
-    }
-    
-    .project-meta {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    
-    .project-meta span {
-        font-size: 0.85rem;
-        color: #666;
-    }
-    
-    .project-skills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 15px;
-    }
-    
-    .skill-tag {
-        background-color: #f0f0f0;
-        color: #555;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 0.75rem;
-    }
-    
-    /* Applications List */
-    .applications-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .application-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        border-radius: 8px;
-        background-color: white;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-    
-    .applicant-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .applicant-avatar {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    
-    .applicant-info h3 {
-        font-size: 1rem;
-        margin: 0 0 3px;
-    }
-    
-    .applicant-info p {
-        margin: 0 0 3px;
-        font-size: 0.85rem;
-        color: #555;
-    }
-    
-    .application-date {
-        font-size: 0.8rem;
-        color: #999;
-    }
-    
-    .application-status {
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 3px 8px;
-        border-radius: 4px;
-    }
-    
-    .status-pending {
-        background-color: #ffc107;
-        color: #333;
-    }
-    
-    .status-accepted {
-        background-color: #28a745;
-        color: white;
-    }
-    
-    .status-rejected {
-        background-color: #dc3545;
-        color: white;
-    }
-    
-    /* Stats Grid */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-    }
-    
-    .stat-item {
-        text-align: center;
-        padding: 15px 10px;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-    
-    .stat-value {
-        display: block;
-        font-size: 1.8rem;
-        font-weight: 600;
-        color: #4B4ACF;
-        margin-bottom: 5px;
-    }
-    
-    .stat-label {
-        font-size: 0.8rem;
-        color: #666;
-    }
-    
-    /* Tech Stack Analysis */
-    .tech-analysis-form {
-        background-color: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-    }
-    
-    .form-group {
-        margin-bottom: 15px;
-    }
-    
-    label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-    }
-    
-    .form-control {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-family: inherit;
-    }
-    
-    .analysis-results {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-    }
-    
-    .tech-suggestions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .tech-item {
-        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
-        color: white;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        display: inline-block;
-    }
-    
-    .loading {
-        color: #666;
-        font-style: italic;
-    }
-    
-    /* Empty States */
-    .empty-state {
-        text-align: center;
-        padding: 20px;
-    }
-    
-    .empty-icon {
-        font-size: 3rem;
-        color: #ccc;
-        margin-bottom: 15px;
-        display: block;
-    }
-    
-    .empty-state p {
-        color: #888;
-        margin-bottom: 15px;
-    }
-    
-    /* Buttons */
-    .btn {
-        display: inline-block;
-        padding: 8px 16px;
-        border-radius: 6px;
-        text-decoration: none;
-        text-align: center;
-        font-weight: 500;
-        transition: all 0.2s;
-        border: none;
-        cursor: pointer;
-    }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        box-shadow: 0 5px 15px rgba(75, 74, 207, 0.3);
-    }
-    
-    .btn-small {
-        padding: 5px 10px;
-        font-size: 0.85rem;
-        background-color: #f0f0f0;
-        color: #555;
-    }
-    
-    .btn-small:hover {
-        background-color: #e0e0e0;
-    }
-    
-    /* Responsive */
-    @media (max-width: 1200px) {
-        .widget-large {
-            grid-column: span 4;
-        }
-        
-        .widget-medium,
-        .widget-small {
-            grid-column: span 2;
-        }
-    }
-    
-    @media (max-width: 991px) {
-        .vertical-nav {
-            width: 230px;
-        }
-        
-        .main-content {
-            margin-left: 230px;
-        }
-        
-        .cta-content {
-            flex-direction: column;
-            text-align: center;
-        }
-    }
-    
-    @media (max-width: 767px) {
-        .dashboard-container {
-            flex-direction: column;
-        }
-        
-        .vertical-nav {
-            width: 100%;
-            height: auto;
-            position: relative;
-            padding: 15px 0;
-        }
-        
-        .logo-container {
-            padding: 5px 20px 15px;
-        }
-        
-        .user-info {
-            padding: 0 20px 10px;
-            margin-bottom: 10px;
-        }
-        
-        .avatar {
-            width: 60px;
-            height: 60px;
-        }
-        
-        .nav-links {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .nav-links li {
-            margin: 0 5px 5px 0;
-        }
-        
-        .nav-links li a {
-            padding: 8px 15px;
-        }
-        
-        .nav-footer {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .switch-role-btn, 
-        .logout-btn {
-            width: auto;
-            flex: 1;
-        }
-        
-        .main-content {
-            margin-left: 0;
-            padding: 20px;
-        }
-        
-        .widgets-container {
-            grid-gap: 15px;
-        }
-        
-        .widget-large,
-        .widget-medium,
-        .widget-small {
-            grid-column: span 4;
-        }
-    }
-</style>
 {% endblock %}

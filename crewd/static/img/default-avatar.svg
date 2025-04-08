@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="50" r="50" fill="#40E0D0"/>
-  <circle cx="50" cy="38" r="18" fill="#4B4ACF"/>
-  <path d="M25,84 C25,65 75,65 75,84" stroke="#4B4ACF" stroke-width="12" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="100" fill="#4B4ACF" />
+  <circle cx="100" cy="70" r="30" fill="white" />
+  <path d="M100 110 C65 110, 40 135, 40 180 L160 180 C160 135, 135 110, 100 110" fill="white" />
 </svg>

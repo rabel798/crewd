@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 
-# List of technology choices for projects and user profiles
+# Available tech choices for skills
 TECH_CHOICES = [
     'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Node.js',
     'Python', 'Django', 'Flask', 'FastAPI', 'PHP', 'Laravel', 'Symfony',
