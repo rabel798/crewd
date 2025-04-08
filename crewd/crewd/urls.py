@@ -1,27 +1,20 @@
 """
-URL configuration for crewd project.
+URL Configuration for the Crewd project.
 """
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import TemplateView
-from projects.views import DashboardView
-import sys
-import os
 
-# Add the parent directory to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from views import index
+from projects.views import IndexView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', index, name='index'),
-    path('accounts/', include('accounts.urls')),
-    path('projects/', include('projects.urls')),
-    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('', IndexView.as_view(), name='index'),
+    path('projects/', include('projects.urls', namespace='projects')),
+    path('accounts/', include('accounts.urls', namespace='accounts')),
 ]
 
-# Add media handling for development
+# Add media URL patterns if in debug mode
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,126 +1,959 @@
-
 {% extends 'base.html' %}
-
-{% block title %}Crewd - Connect. Collaborate. Create.{% endblock %}
+{% load static %}
 
 {% block content %}
-<div class="text-center" style="padding: 4rem 0;">
-    <div style="text-align: center; margin-bottom: 3rem;">
-        <img src="/static/img/logo.png" alt="Crewd Logo" class="floating-logo" style="width: 200px; height: auto;">
-    </div>
-
-    <style>
-    .floating-logo {
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-        animation: float 6s ease-in-out infinite, glow 2s ease-in-out infinite;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
-    }
-
-    @keyframes glow {
-        0%, 100% { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 15px rgba(75, 74, 207, 0.4)); }
-        50% { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) drop-shadow(0 0 25px rgba(75, 74, 207, 0.6)); }
-    }
-    </style>
+<div class="landing-container">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="{% static 'img/logo.jpg' %}" alt="Crewd Logo" class="logo">
+                </div>
+                <div class="auth-links">
+                    <button class="btn-login" id="show-login">Login</button>
+                    <button class="btn-register" id="show-register">Register</button>
+                </div>
+            </div>
+            
+            <div class="hero-content">
+                <h1>Connect with the <span class="text-highlight">right team</span></h1>
+                <p>Crewd helps you find the best team members for your projects or join exciting projects that match your skills</p>
+                
+                <div class="hero-cta">
+                    <button class="btn-primary btn-get-started" id="show-register-cta">Get Started</button>
+                    <a href="#features" class="btn-secondary">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
     
-    <h1 class="welcome-headline" style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(to right, #4B4ACF, #40E0D0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center;">Welcome to Crewd</h1>
-    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto; text-align: center;">Building teams that transform ideas into reality.</p>
-
-    <section class="roles-section" style="padding: 50px 20px;">
-        <div class="roles-container" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
-            <!-- Applicant Card -->
-            <div class="role-card glass-card" style="width: 350px; height: 400px; perspective: 1000px; cursor: pointer;">
-                <div class="role-card-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
-                    <div class="role-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; text-align: center; padding: 30px;">
-                        <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Applicants</h3>
-                        <p>Discover opportunities that match your skills and join exciting projects.</p>
-                        <p style="margin-top: 20px; font-style: italic;">(Hover to see more)</p>
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="auth-modal">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-tabs">
+                    <button class="auth-tab auth-tab-login active" id="login-tab">Login</button>
+                    <button class="auth-tab auth-tab-register" id="register-tab">Register</button>
+                </div>
+                <button class="auth-close" id="close-auth">&times;</button>
+            </div>
+            
+            <div class="auth-content">
+                <!-- Login Form -->
+                <form class="auth-form login-form active" id="login-form" method="post" action="{% url 'accounts:login' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="login-username">Username or Email</label>
+                        <input type="text" id="login-username" name="username" required>
                     </div>
-                    <div class="role-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, #4B4ACF, #40E0D0); color: white; padding: 30px;">
-                        <ul style="list-style: none; margin-bottom: 20px;">
-                            <li style="margin-bottom: 10px;">✓ Find matching projects</li>
-                            <li style="margin-bottom: 10px;">✓ Showcase your skills</li>
-                            <li style="margin-bottom: 10px;">✓ Connect with teams</li>
-                            <li style="margin-bottom: 10px;">✓ Build your portfolio</li>
-                        </ul>
-                        <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #4B4ACF;">Join Now</a>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" required>
                     </div>
+                    <button type="submit" class="btn-auth btn-login-submit">Login</button>
+                    <div class="form-footer">
+                        <a href="#" class="forgot-password">Forgot Password?</a>
+                    </div>
+                </form>
+                
+                <!-- Register Form -->
+                <form class="auth-form register-form" id="register-form" method="post" action="{% url 'accounts:register' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" name="password1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm-password">Confirm Password</label>
+                        <input type="password" id="register-confirm-password" name="password2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-profile-picture">Profile Picture (Optional)</label>
+                        <input type="file" id="register-profile-picture" name="profile_picture" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn-auth btn-register-submit">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Choose Crewd?</h2>
+                <p>Our platform offers powerful features for both team leaders and applicants</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Smart Team Matching</h3>
+                    <p>Our algorithm helps you find team members with the exact skills needed for your project</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h3>Project Management</h3>
+                    <p>Easily create and manage your projects with powerful tools and real-time updates</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI-Powered Recommendations</h3>
+                    <p>Get tech stack recommendations based on your project description using Grok AI</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Team Communication</h3>
+                    <p>Built-in group chats for seamless team coordination and collaboration</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Secure Platform</h3>
+                    <p>Your data and communications are secure with our enterprise-grade security</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Fully Responsive</h3>
+                    <p>Access Crewd from any device with our fully responsive design</p>
                 </div>
             </div>
-
-            <!-- Team Leader Card -->
-            <div class="role-card glass-card" style="width: 350px; height: 400px; perspective: 1000px; cursor: pointer;">
-                <div class="role-card-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
-                    <div class="role-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; text-align: center; padding: 30px;">
-                        <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Team Leaders</h3>
-                        <p>Create projects and find the perfect team members.</p>
-                        <p style="margin-top: 20px; font-style: italic;">(Hover to see more)</p>
-                    </div>
-                    <div class="role-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, #4B4ACF, #40E0D0); color: white; padding: 30px;">
-                        <ul style="list-style: none; margin-bottom: 20px;">
-                            <li style="margin-bottom: 10px;">✓ Post project opportunities</li>
-                            <li style="margin-bottom: 10px;">✓ Review applications</li>
-                            <li style="margin-bottom: 10px;">✓ Build dream teams</li>
-                            <li style="margin-bottom: 10px;">✓ Manage projects</li>
-                        </ul>
-                        <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #4B4ACF;">Start Leading</a>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Getting started with Crewd is simple</p>
+            </div>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Create an Account</h3>
+                        <p>Sign up and choose whether you want to start as a project creator or join existing projects</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Company Card -->
-            <div class="role-card glass-card" style="width: 350px; height: 400px; perspective: 1000px; cursor: pointer;">
-                <div class="role-card-inner" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
-                    <div class="role-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; text-align: center; padding: 30px;">
-                        <h3 style="margin-bottom: 1rem; color: #4B4ACF;">For Companies</h3>
-                        <p>Find skilled teams and manage company initiatives.</p>
-                        <p style="margin-top: 20px; font-style: italic;">(Hover to see more)</p>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Set Up Your Profile</h3>
+                        <p>Add your skills, experience, and preferences to help us make better matches</p>
                     </div>
-                    <div class="role-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, #4B4ACF, #40E0D0); color: white; padding: 30px;">
-                        <ul style="list-style: none; margin-bottom: 20px;">
-                            <li style="margin-bottom: 10px;">✓ Talent acquisition</li>
-                            <li style="margin-bottom: 10px;">✓ Project management</li>
-                            <li style="margin-bottom: 10px;">✓ Team analytics</li>
-                            <li style="margin-bottom: 10px;">✓ Resource planning</li>
-                        </ul>
-                        <a href="{% url 'accounts:register' %}" class="btn" style="background: white; color: #4B4ACF;">Get Started</a>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Create or Join Projects</h3>
+                        <p>Start your own project or apply to join projects that match your skills</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Build Amazing Things</h3>
+                        <p>Collaborate with your team and bring your ideas to life</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-</div>
-
-<style>
-.role-card:hover .role-card-inner {
-    transform: rotateY(180deg);
-}
-
-@media (max-width: 768px) {
-    .role-card {
-        width: 100%;
-        max-width: 350px;
-        margin-bottom: 20px;
-    }
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const roleCards = document.querySelectorAll('.role-card');
     
-    roleCards.forEach(card => {
-        card.addEventListener('touchstart', function() {
-            const cardInner = this.querySelector('.role-card-inner');
-            cardInner.style.transform = 
-                cardInner.style.transform === 'rotateY(180deg)' 
-                    ? 'rotateY(0deg)' 
-                    : 'rotateY(180deg)';
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="{% static 'img/logo.jpg' %}" alt="Crewd Logo" class="logo">
+                    <p>Connect with the right team</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Links</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-social">
+                    <h4>Connect With Us</h4>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; {% now "Y" %} Crewd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auth Modal Logic
+        const authModal = document.getElementById('auth-modal');
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showLoginBtn = document.getElementById('show-login');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showRegisterCtaBtn = document.getElementById('show-register-cta');
+        const closeAuthBtn = document.getElementById('close-auth');
+        
+        // Show Login Form
+        function showLogin() {
+            authModal.classList.add('active');
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Show Register Form
+        function showRegister() {
+            authModal.classList.add('active');
+            loginTab.classList.remove('active');
+            registerTab.classList.add('active');
+            loginForm.classList.remove('active');
+            registerForm.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close Auth Modal
+        function closeAuth() {
+            authModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Event Listeners
+        if (showLoginBtn) showLoginBtn.addEventListener('click', showLogin);
+        if (showRegisterBtn) showRegisterBtn.addEventListener('click', showRegister);
+        if (showRegisterCtaBtn) showRegisterCtaBtn.addEventListener('click', showRegister);
+        if (closeAuthBtn) closeAuthBtn.addEventListener('click', closeAuth);
+        if (loginTab) loginTab.addEventListener('click', function() {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        });
+        if (registerTab) registerTab.addEventListener('click', function() {
+            loginTab.classList.remove('active');
+            registerTab.classList.add('active');
+            loginForm.classList.remove('active');
+            registerForm.classList.add('active');
+        });
+        
+        // Close modal on outside click
+        window.addEventListener('click', function(e) {
+            if (e.target === authModal) {
+                closeAuth();
+            }
         });
     });
-});
 </script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Landing Page Styles */
+    :root {
+        --primary-color: #4B4ACF;
+        --secondary-color: #40E0D0;
+        --text-dark: #333333;
+        --text-light: #666666;
+        --text-muted: #999999;
+        --bg-light: #f7f9fc;
+        --border-color: #eeeeee;
+        --gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    }
+    
+    /* General Layout */
+    .landing-container {
+        min-height: 100vh;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    
+    /* Hero Section */
+    .hero {
+        position: relative;
+        height: 100vh;
+        min-height: 600px;
+        display: flex;
+        align-items: center;
+        color: white;
+        overflow: hidden;
+    }
+    
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient);
+        z-index: -2;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+        opacity: 0.8;
+        z-index: -1;
+    }
+    
+    .header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+    }
+    
+    .logo-container .logo {
+        height: 50px;
+        width: auto;
+    }
+    
+    .auth-links {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .btn-login, 
+    .btn-register {
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+    }
+    
+    .btn-login {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-login:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-register {
+        background-color: white;
+        color: var(--primary-color);
+    }
+    
+    .btn-register:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .hero-content {
+        max-width: 650px;
+        padding-top: 80px;
+    }
+    
+    .hero-content h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 20px;
+    }
+    
+    .text-highlight {
+        color: var(--secondary-color);
+    }
+    
+    .hero-content p {
+        font-size: 1.2rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+    
+    .hero-cta {
+        display: flex;
+        gap: 20px;
+    }
+    
+    .btn-primary, 
+    .btn-secondary {
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background-color: white;
+        color: var(--primary-color);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-secondary {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-secondary:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Auth Modal */
+    .auth-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-modal.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .auth-container {
+        background-color: white;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        transform: translateY(30px);
+        transition: all 0.3s ease;
+    }
+    
+    .auth-modal.active .auth-container {
+        transform: translateY(0);
+    }
+    
+    .auth-header {
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .auth-tabs {
+        display: flex;
+        gap: 20px;
+    }
+    
+    .auth-tab {
+        background: none;
+        border: none;
+        padding: 8px 5px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .auth-tab::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .auth-tab.active {
+        color: var(--primary-color);
+    }
+    
+    .auth-tab.active::after {
+        transform: scaleX(1);
+    }
+    
+    .auth-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 5px;
+    }
+    
+    .auth-content {
+        padding: 25px;
+    }
+    
+    .auth-form {
+        display: none;
+    }
+    
+    .auth-form.active {
+        display: block;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-group input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+    
+    .btn-auth {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-login-submit,
+    .btn-register-submit {
+        background: var(--gradient);
+        color: white;
+    }
+    
+    .btn-login-submit:hover,
+    .btn-register-submit:hover {
+        box-shadow: 0 5px 15px rgba(75, 74, 207, 0.3);
+    }
+    
+    .form-footer {
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    .forgot-password {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .forgot-password:hover {
+        color: var(--primary-color);
+    }
+    
+    /* Features Section */
+    .features {
+        padding: 100px 0;
+        background-color: white;
+    }
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    
+    .section-header h2 {
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin-bottom: 15px;
+    }
+    
+    .section-header p {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+    
+    .feature-card {
+        background-color: var(--bg-light);
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border-color: var(--border-color);
+    }
+    
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        background: var(--gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        color: white;
+        font-size: 1.8rem;
+    }
+    
+    .feature-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        color: var(--text-dark);
+    }
+    
+    .feature-card p {
+        color: var(--text-light);
+        line-height: 1.6;
+    }
+    
+    /* How It Works Section */
+    .how-it-works {
+        padding: 100px 0;
+        background-color: var(--bg-light);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .how-it-works::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiM0QjRBQ0YiIG9wYWNpdHk9IjAuMDUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGF0dGVybikiLz48L3N2Zz4=');
+        opacity: 1;
+        z-index: 0;
+    }
+    
+    .how-it-works .container {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .steps {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 40px;
+        background-color: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
+    }
+    
+    .step:last-child {
+        margin-bottom: 0;
+    }
+    
+    .step-number {
+        width: 50px;
+        height: 50px;
+        background: var(--gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-right: 20px;
+        flex-shrink: 0;
+    }
+    
+    .step-content h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        color: var(--text-dark);
+    }
+    
+    .step-content p {
+        color: var(--text-light);
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    /* Footer */
+    .footer {
+        padding: 80px 0 30px;
+        background-color: #151435;
+        color: white;
+    }
+    
+    .footer-content {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 50px;
+    }
+    
+    .footer-logo {
+        flex-basis: 300px;
+        margin-bottom: 30px;
+    }
+    
+    .footer-logo .logo {
+        height: 50px;
+        width: auto;
+        margin-bottom: 15px;
+    }
+    
+    .footer-logo p {
+        opacity: 0.8;
+    }
+    
+    .footer-links {
+        flex-basis: 200px;
+        margin-bottom: 30px;
+    }
+    
+    .footer-links h4,
+    .footer-social h4 {
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+    }
+    
+    .footer-links ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .footer-links li {
+        margin-bottom: 10px;
+    }
+    
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .footer-links a:hover {
+        color: var(--secondary-color);
+    }
+    
+    .footer-social {
+        flex-basis: 200px;
+        margin-bottom: 30px;
+    }
+    
+    .social-icons {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .social-icon:hover {
+        background-color: var(--secondary-color);
+        color: #151435;
+        transform: translateY(-3px);
+    }
+    
+    .footer-bottom {
+        text-align: center;
+        padding-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+    }
+    
+    /* Responsive Styles */
+    @media (max-width: 991px) {
+        .hero-content h1 {
+            font-size: 2.8rem;
+        }
+    }
+    
+    @media (max-width: 767px) {
+        .hero {
+            min-height: 500px;
+        }
+        
+        .header {
+            padding: 15px;
+        }
+        
+        .logo-container .logo {
+            height: 40px;
+        }
+        
+        .btn-login, 
+        .btn-register {
+            padding: 6px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .hero-content {
+            padding-top: 60px;
+            text-align: center;
+        }
+        
+        .hero-content h1 {
+            font-size: 2.2rem;
+        }
+        
+        .hero-content p {
+            font-size: 1rem;
+        }
+        
+        .hero-cta {
+            justify-content: center;
+        }
+        
+        .btn-primary, 
+        .btn-secondary {
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2rem;
+        }
+        
+        .section-header p {
+            font-size: 1rem;
+        }
+        
+        .features,
+        .how-it-works {
+            padding: 60px 0;
+        }
+        
+        .step {
+            padding: 20px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .hero-content h1 {
+            font-size: 1.8rem;
+        }
+        
+        .btn-primary, 
+        .btn-secondary {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .auth-container {
+            width: 90%;
+        }
+        
+        .auth-tab {
+            font-size: 1rem;
+        }
+    }
+</style>
 {% endblock %}

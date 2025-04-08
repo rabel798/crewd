@@ -1,0 +1,81 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Invite Contributor - Crewd{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <h1>Invite Contributor to {{ project.title }}</h1>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Contributor Details</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="contributor-info">
+            <div class="user-avatar">
+                {% if contributor.profile_picture %}
+                <img src="{{ contributor.profile_picture.url }}" alt="{{ contributor.username }}">
+                {% else %}
+                <img src="/static/img/default-avatar.png" alt="{{ contributor.username }}">
+                {% endif %}
+            </div>
+            <div class="contributor-details">
+                <h3>{{ contributor.username }}</h3>
+                <p><strong>Tech Stack:</strong></p>
+                <div class="tech-stack">
+                    {% for tech in contributor.get_tech_stack_list %}
+                        <span class="tech-badge {% if tech in project.get_required_skills_list %}tech-badge-match{% endif %}">{{ tech }}</span>
+                    {% endfor %}
+                </div>
+                <p><strong>Match:</strong> {{ match_percentage }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Send Invitation</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="message">Message (Optional)</label>
+                <textarea id="message" name="message" class="form-control" rows="5" placeholder="Explain why you'd like this person to join your project..."></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn">Send Invitation</button>
+                <a href="{% url 'projects:find_contributors' project.id %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    .contributor-info {
+        display: flex;
+        margin-bottom: 20px;
+    }
+    
+    .user-avatar {
+        width: 100px;
+        height: 100px;
+        margin-right: 20px;
+    }
+    
+    .contributor-details {
+        flex: 1;
+    }
+    
+    .tech-badge-match {
+        background: linear-gradient(135deg, #50fa7b, #8be9fd);
+    }
+</style>
+{% endblock %}

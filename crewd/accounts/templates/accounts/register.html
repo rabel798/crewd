@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <a href="{% url 'index' %}" class="header-logo">
+                <img src="{% static 'img/logo.jpg' %}" alt="Crewd Logo" class="logo">
+            </a>
+            <h2>Create Your Account</h2>
+        </div>
+        
+        <form method="post" class="auth-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {{ form.username|as_crispy_field }}
+            {{ form.email|as_crispy_field }}
+            {{ form.password1|as_crispy_field }}
+            {{ form.password2|as_crispy_field }}
+            {{ form.profile_picture|as_crispy_field }}
+            
+            <div class="form-group">
+                <label>Tech Skills</label>
+                <p class="help-text">Select technologies you're skilled in</p>
+                <div class="tech-skills-container">
+                    {% for tech_choice in form.tech_stack %}
+                    <div class="tech-option">
+                        {{ tech_choice }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-auth">Register</button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'accounts:login' %}">Log In</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-page-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        padding: 20px;
+    }
+    
+    .auth-box {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        padding: 30px;
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .header-logo {
+        display: block;
+        margin-bottom: 20px;
+    }
+    
+    .logo {
+        height: 60px;
+        width: auto;
+    }
+    
+    .auth-header h2 {
+        color: #333;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+    
+    .auth-form {
+        margin-bottom: 20px;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .tech-skills-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    
+    .tech-option {
+        font-size: 0.9rem;
+    }
+    
+    .btn-auth {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: all 0.3s;
+    }
+    
+    .btn-auth:hover {
+        box-shadow: 0 5px 15px rgba(75, 74, 207, 0.3);
+    }
+    
+    .auth-footer {
+        text-align: center;
+        color: #666;
+    }
+    
+    .auth-footer a {
+        color: #4B4ACF;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .tech-skills-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tech-skills-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

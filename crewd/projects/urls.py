@@ -1,44 +1,54 @@
 from django.urls import path
-from . import views
-from . import dashboard_views
+
+from .views import (
+    IndexView, ViewProjectView, ApplyProjectView, ProfileView, 
+    ViewUserProfileView, AnalyzeTechStackView
+)
+from .dashboard_views import (
+    ApplicantDashboardView, TeamLeaderDashboardView, SwitchRoleView,
+    ContributorsListView, ProjectsListView, InvitationsListView,
+    UpdateInvitationView, MyContributionsView, GroupsListView,
+    ViewGroupView, MyProjectsView, CreateProjectView, ManageProjectView,
+    FindContributorsView, InviteContributorView, SentInvitationsView,
+    CancelInvitationView, ApplicationsListView, ViewApplicationView,
+    UpdateApplicationView
+)
 
 app_name = 'projects'
 
 urlpatterns = [
-    # Regular project views
-    path('', views.ProjectListView.as_view(), name='project_list'),
-    path('create/', views.CreateProjectView.as_view(), name='create_project'),
-    path('<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
-    path('<int:pk>/apply/', views.ApplyToProjectView.as_view(), name='apply_project'),
+    # Dashboard views
+    path('applicant/', ApplicantDashboardView.as_view(), name='applicant_dashboard'),
+    path('leader/', TeamLeaderDashboardView.as_view(), name='team_leader_dashboard'),
+    path('switch-role/', SwitchRoleView.as_view(), name='switch_role'),
     
-    # Dashboard views - Shared
-    path('dashboard/', dashboard_views.DashboardView.as_view(), name='dashboard'),
-    path('dashboard/switch-role/', dashboard_views.SwitchRoleView.as_view(), name='dashboard_switch_role'),
-    path('profile/<int:user_id>/', dashboard_views.ViewProfileView.as_view(), name='view_profile'),
+    # Applicant views
+    path('contributors/', ContributorsListView.as_view(), name='contributors_list'),
+    path('browse/', ProjectsListView.as_view(), name='projects_list'),
+    path('invitations/', InvitationsListView.as_view(), name='invitations_list'),
+    path('invitations/<int:invitation_id>/update/', UpdateInvitationView.as_view(), name='update_invitation'),
+    path('contributions/', MyContributionsView.as_view(), name='my_contributions'),
+    path('groups/', GroupsListView.as_view(), name='groups_list'),
+    path('groups/<int:group_id>/', ViewGroupView.as_view(), name='view_group'),
     
-    # Dashboard views - Applicant
-    path('dashboard/applicant/', dashboard_views.ApplicantDashboardView.as_view(), name='dashboard_applicant'),
-    path('dashboard/contributors/', dashboard_views.ContributorsListView.as_view(), name='contributors_list'),
-    path('dashboard/projects/list/', dashboard_views.ProjectsListView.as_view(), name='projects_list'),
-    path('dashboard/invitations/', dashboard_views.InvitationsListView.as_view(), name='invitations_list'),
-    path('dashboard/invitations/<int:invitation_id>/update/', dashboard_views.UpdateInvitationView.as_view(), name='update_invitation'),
-    path('dashboard/contributions/', dashboard_views.MyContributionsView.as_view(), name='my_contributions'),
-    path('dashboard/groups/', dashboard_views.GroupsListView.as_view(), name='groups_list'),
-    path('dashboard/groups/<int:group_id>/', dashboard_views.ViewGroupView.as_view(), name='view_group'),
+    # Team Leader views
+    path('my-projects/', MyProjectsView.as_view(), name='my_projects'),
+    path('create-project/', CreateProjectView.as_view(), name='create_project'),
+    path('manage-project/<int:project_id>/', ManageProjectView.as_view(), name='manage_project'),
+    path('find-contributors/<int:project_id>/', FindContributorsView.as_view(), name='find_contributors'),
+    path('invite-contributor/<int:project_id>/<int:user_id>/', InviteContributorView.as_view(), name='invite_contributor'),
+    path('sent-invitations/', SentInvitationsView.as_view(), name='sent_invitations'),
+    path('cancel-invitation/<int:invitation_id>/', CancelInvitationView.as_view(), name='cancel_invitation'),
+    path('applications/', ApplicationsListView.as_view(), name='applications_list'),
+    path('applications/<int:application_id>/', ViewApplicationView.as_view(), name='view_application'),
+    path('applications/<int:application_id>/update/', UpdateApplicationView.as_view(), name='update_application'),
     
-    # Dashboard views - Team Leader
-    path('dashboard/leader/', dashboard_views.TeamLeaderDashboardView.as_view(), name='dashboard_leader'),
-    path('dashboard/my-projects/', dashboard_views.MyProjectsView.as_view(), name='my_projects'),
-    path('dashboard/create-project/', dashboard_views.CreateProjectView.as_view(), name='create_project'),
-    path('dashboard/projects/<int:project_id>/manage/', dashboard_views.ManageProjectView.as_view(), name='manage_project'),
-    path('dashboard/projects/<int:project_id>/find-contributors/', dashboard_views.FindContributorsView.as_view(), name='find_contributors'),
-    path('dashboard/projects/<int:project_id>/invite/<int:user_id>/', dashboard_views.InviteContributorView.as_view(), name='invite_contributor'),
-    path('dashboard/sent-invitations/', dashboard_views.SentInvitationsView.as_view(), name='sent_invitations'),
-    path('dashboard/invitations/<int:invitation_id>/cancel/', dashboard_views.CancelInvitationView.as_view(), name='cancel_invitation'),
-    path('dashboard/applications/', dashboard_views.ApplicationsListView.as_view(), name='applications_list'),
-    path('dashboard/applications/<int:application_id>/', dashboard_views.ViewApplicationView.as_view(), name='view_application'),
-    path('dashboard/applications/<int:application_id>/update/', dashboard_views.UpdateApplicationView.as_view(), name='update_application'),
+    # Common views
+    path('project/<int:project_id>/', ViewProjectView.as_view(), name='view_project'),
+    path('project/<int:project_id>/apply/', ApplyProjectView.as_view(), name='apply_project'),
+    path('profile/', ProfileView.as_view(), name='profile'),
+    path('profile/<int:user_id>/', ViewUserProfileView.as_view(), name='view_profile'),
     
-    # API endpoints
-    path('api/analyze-tech-stack/', dashboard_views.AnalyzeTechStackView.as_view(), name='analyze_tech_stack'),
+    # API views
+    path('api/analyze-tech-stack/', AnalyzeTechStackView.as_view(), name='analyze_tech_stack'),
 ]

@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    /* Dashboard layout styling */
+    .dashboard-container {
+        display: flex;
+        min-height: calc(100vh - 140px);
+    }
+    
+    /* Vertical navigation sidebar */
+    .sidebar {
+        width: 250px;
+        background: rgba(75, 74, 207, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(75, 74, 207, 0.2);
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: fixed;
+        top: 72px; /* Height of navbar */
+        bottom: 0;
+        overflow-y: auto;
+    }
+    
+    /* Right-aligned sidebar for team leader */
+    .sidebar-right {
+        right: 0;
+        border-right: none;
+        border-left: 1px solid rgba(75, 74, 207, 0.2);
+    }
+    
+    .sidebar-user {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid rgba(75, 74, 207, 0.2);
+        margin-bottom: 20px;
+    }
+    
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 10px;
+        background-color: var(--secondary-color);
+    }
+    
+    .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .user-info {
+        flex: 1;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .user-role {
+        font-size: 0.8rem;
+        color: #777;
+    }
+    
+    .sidebar-nav {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .sidebar-nav li {
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: var(--dark-color);
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+    
+    .sidebar-nav a:hover,
+    .sidebar-nav a.active {
+        background: rgba(75, 74, 207, 0.1);
+        color: var(--primary-color);
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .sidebar-nav i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    /* Main content area */
+    .dashboard-content {
+        flex: 1;
+        padding: 20px;
+        margin-left: 250px; /* Width of sidebar */
+    }
+    
+    /* Right sidebar offset */
+    .dashboard-content-right {
+        margin-left: 0;
+        margin-right: 250px; /* Width of sidebar */
+    }
+    
+    /* Cards for dashboard widgets */
+    .dashboard-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.3s;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .dashboard-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+    
+    .dashboard-card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    /* Status labels */
+    .status-label {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background-color: #50fa7b;
+        color: #282a36;
+    }
+    
+    .status-completed {
+        background-color: #ff5555;
+        color: white;
+    }
+    
+    .status-pending {
+        background-color: #ffb86c;
+        color: #282a36;
+    }
+    
+    .status-accepted {
+        background-color: #8be9fd;
+        color: #282a36;
+    }
+    
+    .status-rejected {
+        background-color: #ff79c6;
+        color: white;
+    }
+    
+    /* Tech stack badges */
+    .tech-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    
+    /* Chat interface */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 400px;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f9f9f9;
+    }
+    
+    .chat-message {
+        margin-bottom: 15px;
+        display: flex;
+    }
+    
+    .chat-message-content {
+        background: white;
+        padding: 10px 15px;
+        border-radius: 15px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        max-width: 70%;
+    }
+    
+    .chat-message.own {
+        justify-content: flex-end;
+    }
+    
+    .chat-message.own .chat-message-content {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .chat-input {
+        display: flex;
+        padding: 10px;
+        background: white;
+        border-top: 1px solid #eee;
+    }
+    
+    .chat-input input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        margin-right: 10px;
+    }
+    
+    .chat-input button {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 0 15px;
+        cursor: pointer;
+    }
+    
+    /* Font awesome icons placeholder */
+    .fa {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background: var(--primary-color);
+        margin-right: 10px;
+        border-radius: 50%;
+    }
+</style>
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar {% if user.role == 'leader' %}sidebar-right{% endif %}">
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}">
+                {% else %}
+                <img src="/static/img/default-avatar.png" alt="{{ user.username }}">
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <div class="user-name">{{ user.username }}</div>
+                <div class="user-role">
+                    {% if user.role == 'applicant' %}
+                    Applicant
+                    {% elif user.role == 'leader' %}
+                    Team Leader
+                    {% else %}
+                    Company
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-nav">
+            {% block sidebar_items %}
+            <!-- Will be overridden by specific dashboard templates -->
+            {% endblock %}
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-content {% if user.role == 'leader' %}dashboard-content-right{% endif %}">
+        {% block dashboard_content %}
+        <!-- Will be overridden by specific dashboard templates -->
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Mark the current page item as active in the sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+        
+        sidebarLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+    
+    // Add real-time chat functionality
+    function setupChat(chatId, userId, groupId) {
+        const chatMessages = document.getElementById('chat-messages-' + chatId);
+        const chatInput = document.getElementById('chat-input-' + chatId);
+        const chatSendBtn = document.getElementById('chat-send-' + chatId);
+        
+        if (!chatMessages || !chatInput || !chatSendBtn) return;
+        
+        // Function to send a message
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            // Send to backend (to be implemented)
+            fetch('/api/send-message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    content: message,
+                    group_id: groupId,
+                    recipient_id: userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add message to chat
+                    addMessage(message, true);
+                    chatInput.value = '';
+                }
+            });
+        }
+        
+        // Function to add a message to the chat
+        function addMessage(content, isOwn) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isOwn ? 'chat-message own' : 'chat-message';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'chat-message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Event listeners
+        chatSendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Fetch initial messages
+        fetch('/api/get-messages/?group_id=' + groupId + '&user_id=' + userId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages) {
+                data.messages.forEach(msg => {
+                    addMessage(msg.content, msg.sender_id === userId);
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

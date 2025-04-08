@@ -1,0 +1,90 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}{{ group.name }} - Crewd{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1>{{ group.name }}</h1>
+        <p><strong>Project:</strong> <a href="{% url 'projects:view_project' group.project.id %}">{{ group.project.title }}</a></p>
+    </div>
+    <div class="page-header-actions">
+        {% if user == group.project.creator %}
+        <a href="{% url 'projects:manage_project' group.project.id %}" class="btn">Manage Project</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Group Members</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="member-list">
+            {% for member in members %}
+                <div class="member-item">
+                    <div class="user-avatar">
+                        {% if member.profile_picture %}
+                        <img src="{{ member.profile_picture.url }}" alt="{{ member.username }}">
+                        {% else %}
+                        <img src="/static/img/default-avatar.png" alt="{{ member.username }}">
+                        {% endif %}
+                    </div>
+                    <div class="member-info">
+                        <h3><a href="{% url 'projects:view_profile' member.id %}">{{ member.username }}</a></h3>
+                        <p>
+                            {% if member == group.project.creator %}
+                                <span class="badge">Team Lead</span>
+                            {% else %}
+                                <span class="badge">Member</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Group Chat</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="chat-container">
+            <div id="chat-messages-{{ group.id }}" class="chat-messages">
+                {% for message in messages %}
+                    <div class="chat-message {% if message.sender == user %}own{% endif %}">
+                        <div class="chat-message-content">
+                            <div class="chat-message-header">
+                                <strong>{{ message.sender.username }}</strong>
+                                <span class="timestamp">{{ message.created_at|date:"M d, Y H:i" }}</span>
+                            </div>
+                            <div class="chat-message-text">
+                                {{ message.content }}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="empty-message">No messages yet. Start the conversation!</p>
+                {% endfor %}
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="chat-input-{{ group.id }}" placeholder="Type your message..." class="form-control">
+                <button id="chat-send-{{ group.id }}" class="btn">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize chat functionality
+        setupChat('{{ group.id }}', '{{ user.id }}', '{{ group.id }}');
+    });
+</script>
+{% endblock %}

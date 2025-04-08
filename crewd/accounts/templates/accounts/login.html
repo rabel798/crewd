@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <a href="{% url 'index' %}" class="header-logo">
+                <img src="{% static 'img/logo.jpg' %}" alt="Crewd Logo" class="logo">
+            </a>
+            <h2>Log In to Crewd</h2>
+        </div>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn-auth">Log In</button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{% url 'accounts:register' %}">Register</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-page-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        padding: 20px;
+    }
+    
+    .auth-box {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px;
+        padding: 30px;
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .header-logo {
+        display: block;
+        margin-bottom: 20px;
+    }
+    
+    .logo {
+        height: 60px;
+        width: auto;
+    }
+    
+    .auth-header h2 {
+        color: #333;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+    
+    .auth-form {
+        margin-bottom: 20px;
+    }
+    
+    .btn-auth {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: all 0.3s;
+    }
+    
+    .btn-auth:hover {
+        box-shadow: 0 5px 15px rgba(75, 74, 207, 0.3);
+    }
+    
+    .auth-footer {
+        text-align: center;
+        color: #666;
+    }
+    
+    .auth-footer a {
+        color: #4B4ACF;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

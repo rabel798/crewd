@@ -1,0 +1,260 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Create Project - Crewd{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    .analyze-result {
+        margin-top: 15px;
+        padding: 15px;
+        border: 1px solid #eee;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        display: none;
+    }
+    
+    .analyze-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 15px;
+    }
+    
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(75, 74, 207, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .skill-checkbox {
+        display: inline-block;
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .suggested-skills {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: rgba(75, 74, 207, 0.05);
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <h1>Create New Project</h1>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-body">
+        <form method="post" action="{% url 'projects:create_project' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="title">Project Title</label>
+                <input type="text" id="title" name="title" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="5" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <div class="d-flex">
+                    <label for="required_skills">Required Skills</label>
+                    <button type="button" id="analyze-btn" class="btn btn-outline btn-sm ml-auto">Analyze Tech Stack</button>
+                </div>
+                
+                <div id="analyze-loading" class="analyze-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Analyzing description...</span>
+                </div>
+                
+                <div id="analyze-result" class="analyze-result"></div>
+                
+                <div class="skill-selection">
+                    {% for skill in tech_choices %}
+                        <div class="skill-checkbox">
+                            <input type="checkbox" id="skill-{{ forloop.counter }}" name="required_skills" value="{{ skill }}">
+                            <label for="skill-{{ forloop.counter }}">{{ skill }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="team_size">Team Size</label>
+                <input type="number" id="team_size" name="team_size" class="form-control" min="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="duration">Project Duration</label>
+                <input type="text" id="duration" name="duration" class="form-control" placeholder="e.g., 3 months" required>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn">Create Project</button>
+                <a href="{% url 'projects:my_projects' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Recommended Contributors</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <p>Enter your project details above and click "Analyze Tech Stack" to see recommended contributors.</p>
+        <div id="recommended-contributors"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const analyzeResult = document.getElementById('analyze-result');
+        const analyzeLoading = document.getElementById('analyze-loading');
+        const description = document.getElementById('description');
+        const recommendedContributors = document.getElementById('recommended-contributors');
+        
+        analyzeBtn.addEventListener('click', function() {
+            const descText = description.value.trim();
+            if (!descText) {
+                alert('Please enter a project description first.');
+                return;
+            }
+            
+            // Show loading spinner
+            analyzeLoading.style.display = 'flex';
+            analyzeResult.style.display = 'none';
+            
+            // Make API request to analyze tech stack
+            fetch('{% url "projects:analyze_tech_stack" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    description: descText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                analyzeLoading.style.display = 'none';
+                
+                if (data.skills && data.skills.length > 0) {
+                    // Show results
+                    analyzeResult.style.display = 'block';
+                    
+                    // Create HTML for suggested skills
+                    let skillsHtml = '<div class="suggested-skills">';
+                    skillsHtml += '<p><strong>Suggested Tech Stack:</strong></p>';
+                    
+                    // Check the corresponding checkboxes
+                    const checkboxes = document.querySelectorAll('input[name="required_skills"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = data.skills.includes(checkbox.value);
+                    });
+                    
+                    data.skills.forEach(skill => {
+                        skillsHtml += `<span class="tech-badge">${skill}</span>`;
+                    });
+                    
+                    skillsHtml += '</div>';
+                    analyzeResult.innerHTML = skillsHtml;
+                    
+                    // Fetch recommended contributors based on skills
+                    fetchRecommendedContributors(data.skills);
+                } else {
+                    analyzeResult.innerHTML = '<p>Could not determine the required tech stack from your description. Please select skills manually.</p>';
+                    analyzeResult.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                analyzeLoading.style.display = 'none';
+                analyzeResult.innerHTML = '<p>Error analyzing tech stack. Please try again or select skills manually.</p>';
+                analyzeResult.style.display = 'block';
+                console.error('Error:', error);
+            });
+        });
+        
+        function fetchRecommendedContributors(skills) {
+            // Make API request to get recommended contributors
+            fetch('{% url "projects:find_contributors" 0 %}?skills=' + skills.join(','), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.contributors && data.contributors.length > 0) {
+                    let html = '<div class="list-group">';
+                    
+                    data.contributors.forEach(contributor => {
+                        let matchedSkills = '';
+                        contributor.skills.forEach(skill => {
+                            if (skills.includes(skill)) {
+                                matchedSkills += `<span class="tech-badge tech-badge-match">${skill}</span>`;
+                            } else {
+                                matchedSkills += `<span class="tech-badge">${skill}</span>`;
+                            }
+                        });
+                        
+                        html += `
+                            <div class="list-item">
+                                <div class="list-item-content">
+                                    <h3>${contributor.username}</h3>
+                                    <p><strong>Match:</strong> ${contributor.match_percentage}%</p>
+                                    <div>${matchedSkills}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    recommendedContributors.innerHTML = html;
+                } else {
+                    recommendedContributors.innerHTML = '<p>No matching contributors found for the selected skills.</p>';
+                }
+            })
+            .catch(error => {
+                recommendedContributors.innerHTML = '<p>Error finding recommended contributors.</p>';
+                console.error('Error:', error);
+            });
+        }
+        
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

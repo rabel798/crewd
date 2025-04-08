@@ -1,0 +1,195 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Application Review - Crewd{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <h1>Application Review</h1>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Applicant Information</h2>
+        <a href="{% url 'projects:view_profile' application.applicant.id %}" class="btn btn-outline">View Full Profile</a>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="applicant-info">
+            <div class="user-avatar">
+                {% if application.applicant.profile_picture %}
+                <img src="{{ application.applicant.profile_picture.url }}" alt="{{ application.applicant.username }}">
+                {% else %}
+                <img src="/static/img/default-avatar.png" alt="{{ application.applicant.username }}">
+                {% endif %}
+            </div>
+            <div class="applicant-details">
+                <h3>{{ application.applicant.username }}</h3>
+                <p><strong>Tech Stack:</strong></p>
+                <div class="tech-stack">
+                    {% for tech in application.applicant.get_tech_stack_list %}
+                        <span class="tech-badge {% if tech in project_skills %}tech-badge-match{% endif %}">{{ tech }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Application Details</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="application-details">
+            <p><strong>Project:</strong> <a href="{% url 'projects:view_project' application.project.id %}">{{ application.project.title }}</a></p>
+            <p><strong>Applied:</strong> {{ application.created_at|date:"M d, Y" }}</p>
+            <p><strong>Status:</strong> <span class="status-label status-{{ application.status }}">{{ application.status|title }}</span></p>
+            
+            <div class="message-box">
+                <h3>Applicant's Message:</h3>
+                <div class="message-content">
+                    <p>{{ application.message }}</p>
+                </div>
+            </div>
+            
+            {% if application.status == 'pending' %}
+            <div class="application-actions">
+                <form method="post" action="{% url 'projects:update_application' application.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="accept">
+                    <button type="submit" class="btn">Accept Application</button>
+                </form>
+                
+                <form method="post" action="{% url 'projects:update_application' application.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="btn btn-outline">Reject Application</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Skill Matching</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="skill-matching">
+            <p><strong>Project Required Skills:</strong></p>
+            <div class="tech-stack">
+                {% for skill in application.project.get_required_skills_list %}
+                    <span class="tech-badge">{{ skill }}</span>
+                {% endfor %}
+            </div>
+            
+            <p><strong>Match Analysis:</strong></p>
+            <div class="match-analysis">
+                <div class="match-percent">
+                    <div class="percent-circle" style="--percent: {{ match_percentage }}%">
+                        <span>{{ match_percentage }}%</span>
+                    </div>
+                    <p>Skill Match</p>
+                </div>
+                <div class="match-breakdown">
+                    <p><strong>Matched Skills:</strong> {{ matched_skills_count }} of {{ total_required_skills }}</p>
+                    <ul>
+                        {% for skill in matched_skills %}
+                            <li>{{ skill }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    .applicant-info {
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .applicant-details {
+        margin-left: 20px;
+        flex: 1;
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .message-box {
+        margin: 20px 0;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 15px;
+        background-color: #f9f9f9;
+    }
+    
+    .message-content {
+        white-space: pre-line;
+    }
+    
+    .application-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .application-actions form {
+        margin: 0;
+    }
+    
+    .match-analysis {
+        display: flex;
+        margin-top: 15px;
+        align-items: center;
+    }
+    
+    .match-percent {
+        text-align: center;
+        margin-right: 30px;
+    }
+    
+    .percent-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary-color) calc(var(--percent) * 1%), #eee 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin-bottom: 10px;
+    }
+    
+    .percent-circle::before {
+        content: '';
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: white;
+    }
+    
+    .percent-circle span {
+        position: relative;
+        z-index: 1;
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+    
+    .match-breakdown {
+        flex: 1;
+    }
+    
+    .tech-badge-match {
+        background: linear-gradient(135deg, #50fa7b, #8be9fd);
+    }
+</style>
+{% endblock %}

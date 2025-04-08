@@ -1,5 +1,5 @@
 """
-WSGI config for crewd project.
+WSGI config for crewd_project project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

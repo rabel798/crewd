@@ -1,0 +1,107 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Sent Invitations - Crewd{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <h1>Sent Invitations</h1>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Pending Invitations</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for invitation in pending_invitations %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3>{{ invitation.recipient.username }}</h3>
+                        <p><strong>Project:</strong> <a href="{% url 'projects:view_project' invitation.project.id %}">{{ invitation.project.title }}</a></p>
+                        <p><strong>Sent:</strong> {{ invitation.created_at|date:"M d, Y" }}</p>
+                        <div>
+                            <span class="status-label status-pending">Pending</span>
+                        </div>
+                        {% if invitation.message %}
+                            <div class="message-box">
+                                <p><strong>Your message:</strong> {{ invitation.message }}</p>
+                            </div>
+                        {% endif %}
+                        <div class="list-item-actions">
+                            <form method="post" action="{% url 'projects:cancel_invitation' invitation.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">Cancel Invitation</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No pending invitations.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Responded Invitations</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for invitation in responded_invitations %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3>{{ invitation.recipient.username }}</h3>
+                        <p><strong>Project:</strong> {{ invitation.project.title }}</p>
+                        <p><strong>Sent:</strong> {{ invitation.created_at|date:"M d, Y" }}</p>
+                        <div>
+                            {% if invitation.status == 'accepted' %}
+                                <span class="status-label status-accepted">Accepted</span>
+                            {% elif invitation.status == 'rejected' %}
+                                <span class="status-label status-rejected">Rejected</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No responded invitations.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Find Contributors</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="project-selection">
+            <form method="get" action="{% url 'projects:find_contributors' %}">
+                <div class="form-group">
+                    <label for="project-select">Select a project to find contributors for:</label>
+                    <select id="project-select" name="project_id" class="form-control">
+                        <option value="">--Select a project--</option>
+                        {% for project in active_projects %}
+                            <option value="{{ project.id }}">{{ project.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn">Find Contributors</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    .message-box {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        border: 1px solid #eee;
+    }
+</style>
+{% endblock %}

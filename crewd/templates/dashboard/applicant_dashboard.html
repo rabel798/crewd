@@ -1,0 +1,664 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Vertical Navigation Bar -->
+    <div class="vertical-nav">
+        <div class="logo-container">
+            <img src="{% static 'img/logo.jpg' %}" alt="Crewd Logo" class="logo">
+        </div>
+        
+        <div class="user-info">
+            {% if user.profile.profile_picture %}
+                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="avatar">
+            {% else %}
+                <img src="{% static 'img/default-avatar.svg' %}" alt="{{ user.username }}" class="avatar">
+            {% endif %}
+            <h3>{{ user.username }}</h3>
+            <p class="role-badge">Applicant</p>
+        </div>
+        
+        <ul class="nav-links">
+            <li class="{% if active_tab == 'dashboard' %}active{% endif %}">
+                <a href="{% url 'projects:applicant_dashboard' %}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="{% if active_tab == 'contributors' %}active{% endif %}">
+                <a href="{% url 'projects:contributors_list' %}">
+                    <i class="fas fa-users"></i> Contributors
+                </a>
+            </li>
+            <li class="{% if active_tab == 'projects' %}active{% endif %}">
+                <a href="{% url 'projects:projects_list' %}">
+                    <i class="fas fa-project-diagram"></i> Projects
+                </a>
+            </li>
+            <li class="{% if active_tab == 'invitations' %}active{% endif %}">
+                <a href="{% url 'projects:invitations_list' %}">
+                    <i class="fas fa-envelope"></i> Invitations
+                    {% if pending_invitations_count > 0 %}
+                        <span class="badge badge-notification">{{ pending_invitations_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="{% if active_tab == 'contributions' %}active{% endif %}">
+                <a href="{% url 'projects:my_contributions' %}">
+                    <i class="fas fa-code-branch"></i> My Contributions
+                </a>
+            </li>
+            <li class="{% if active_tab == 'groups' %}active{% endif %}">
+                <a href="{% url 'projects:groups_list' %}">
+                    <i class="fas fa-comments"></i> Groups
+                </a>
+            </li>
+        </ul>
+        
+        <div class="nav-footer">
+            <a href="{% url 'projects:switch_role' %}" class="switch-role-btn">
+                <i class="fas fa-exchange-alt"></i> Switch to Team Leader
+            </a>
+            <a href="{% url 'logout' %}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Welcome, {{ user.username }}!</h1>
+            <p>Explore projects and find your next opportunity</p>
+        </div>
+        
+        <!-- Dashboard Widgets -->
+        <div class="widgets-container">
+            <!-- Recommended Projects -->
+            {% if recommended_projects %}
+            <div class="widget widget-large">
+                <div class="widget-header">
+                    <h2>Recommended Projects</h2>
+                    <a href="{% url 'projects:projects_list' %}" class="view-all">View All</a>
+                </div>
+                <div class="widget-content">
+                    <div class="projects-grid">
+                        {% for project in recommended_projects %}
+                        <div class="project-card">
+                            <div class="project-header">
+                                <h3>{{ project.title }}</h3>
+                                <span class="skill-match-badge">{{ project.matching_skill_count }} skills match</span>
+                            </div>
+                            <p class="project-desc">{{ project.description|truncatechars:120 }}</p>
+                            <div class="project-meta">
+                                <span><i class="fas fa-users"></i> Team: {{ project.team_size }}</span>
+                                <span><i class="fas fa-clock"></i> {{ project.duration }}</span>
+                            </div>
+                            <div class="project-skills">
+                                {% for skill in project.get_required_skills_list %}
+                                <span class="skill-tag">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                            <a href="{% url 'projects:view_project' project.id %}" class="btn btn-primary">View Project</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="widget widget-large">
+                <div class="widget-header">
+                    <h2>Recommended Projects</h2>
+                </div>
+                <div class="widget-content empty-state">
+                    <i class="fas fa-project-diagram empty-icon"></i>
+                    <p>Update your profile with tech skills to get personalized project recommendations</p>
+                    <a href="{% url 'projects:profile' %}" class="btn btn-primary">Update Profile</a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Active Memberships -->
+            <div class="widget widget-medium">
+                <div class="widget-header">
+                    <h2>Active Contributions</h2>
+                    <a href="{% url 'projects:my_contributions' %}" class="view-all">View All</a>
+                </div>
+                <div class="widget-content">
+                    {% if active_memberships %}
+                    <div class="memberships-list">
+                        {% for membership in active_memberships %}
+                        <div class="membership-item">
+                            <div class="membership-info">
+                                <h3>{{ membership.project.title }}</h3>
+                                <p>Led by: {{ membership.project.creator.username }}</p>
+                                <span class="membership-date">Joined {{ membership.joined_at|date:"M d, Y" }}</span>
+                            </div>
+                            <a href="{% url 'projects:view_group' membership.project.group.id %}" class="btn btn-small">Open Group</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-code-branch empty-icon"></i>
+                        <p>You're not currently contributing to any projects</p>
+                        <a href="{% url 'projects:projects_list' %}" class="btn btn-primary">Find Projects</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Stats Widget -->
+            <div class="widget widget-small">
+                <div class="widget-header">
+                    <h2>Your Stats</h2>
+                </div>
+                <div class="widget-content">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ active_memberships|length }}</span>
+                            <span class="stat-label">Active Projects</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ pending_invitations_count }}</span>
+                            <span class="stat-label">Pending Invites</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ user.get_tech_stack_list|length }}</span>
+                            <span class="stat-label">Tech Skills</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Layout */
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        background-color: #f7f9fc;
+    }
+    
+    /* Vertical Navigation */
+    .vertical-nav {
+        width: 280px;
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        color: white;
+        padding: 25px 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .logo-container {
+        text-align: center;
+        padding: 10px 20px 30px;
+    }
+    
+    .logo {
+        max-width: 120px;
+        height: auto;
+    }
+    
+    .user-info {
+        text-align: center;
+        padding: 0 20px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 20px;
+    }
+    
+    .avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
+    
+    .user-info h3 {
+        margin: 0 0 5px;
+        font-size: 1.2rem;
+    }
+    
+    .role-badge {
+        display: inline-block;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin: 0;
+    }
+    
+    .nav-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+    }
+    
+    .nav-links li {
+        margin-bottom: 5px;
+    }
+    
+    .nav-links li a {
+        display: flex;
+        align-items: center;
+        padding: 12px 25px;
+        color: white;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-weight: 500;
+        position: relative;
+    }
+    
+    .nav-links li a i {
+        margin-right: 12px;
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .nav-links li.active a, 
+    .nav-links li a:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .badge-notification {
+        background-color: #FF5757;
+        color: white;
+        font-size: 0.7rem;
+        border-radius: 50%;
+        padding: 2px 6px;
+        position: absolute;
+        right: 15px;
+    }
+    
+    .nav-footer {
+        padding: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .switch-role-btn, 
+    .logout-btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+    }
+    
+    .switch-role-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .logout-btn {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .switch-role-btn:hover, 
+    .logout-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        padding: 30px;
+        margin-left: 280px;
+    }
+    
+    .content-header {
+        margin-bottom: 30px;
+    }
+    
+    .content-header h1 {
+        font-size: 1.8rem;
+        margin: 0 0 10px;
+        color: #333;
+    }
+    
+    .content-header p {
+        margin: 0;
+        color: #666;
+    }
+    
+    /* Widgets */
+    .widgets-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 25px;
+    }
+    
+    .widget {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+    
+    .widget-large {
+        grid-column: span 4;
+    }
+    
+    .widget-medium {
+        grid-column: span 2;
+    }
+    
+    .widget-small {
+        grid-column: span 2;
+    }
+    
+    .widget-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .widget-header h2 {
+        font-size: 1.2rem;
+        margin: 0;
+        color: #333;
+    }
+    
+    .view-all {
+        font-size: 0.9rem;
+        color: #4B4ACF;
+        text-decoration: none;
+    }
+    
+    .widget-content {
+        padding: 20px;
+    }
+    
+    /* Projects Grid */
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-gap: 20px;
+    }
+    
+    .project-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03);
+        padding: 15px;
+        border: 1px solid #eee;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .project-header h3 {
+        font-size: 1.1rem;
+        margin: 0;
+        color: #333;
+    }
+    
+    .skill-match-badge {
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    
+    .project-desc {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        flex-grow: 1;
+    }
+    
+    .project-meta {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .project-meta span {
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .project-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .skill-tag {
+        background-color: #f0f0f0;
+        color: #555;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    
+    /* Memberships List */
+    .memberships-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .membership-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .membership-info h3 {
+        font-size: 1rem;
+        margin: 0 0 5px;
+    }
+    
+    .membership-info p {
+        margin: 0 0 5px;
+        font-size: 0.85rem;
+        color: #555;
+    }
+    
+    .membership-date {
+        font-size: 0.8rem;
+        color: #999;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 15px 10px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-value {
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #4B4ACF;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    /* Empty States */
+    .empty-state {
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        color: #ccc;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .empty-state p {
+        color: #888;
+        margin-bottom: 15px;
+    }
+    
+    /* Buttons */
+    .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 500;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4B4ACF 0%, #40E0D0 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        box-shadow: 0 5px 15px rgba(75, 74, 207, 0.3);
+    }
+    
+    .btn-small {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        background-color: #f0f0f0;
+        color: #555;
+    }
+    
+    .btn-small:hover {
+        background-color: #e0e0e0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .widget-large {
+            grid-column: span 4;
+        }
+        
+        .widget-medium,
+        .widget-small {
+            grid-column: span 2;
+        }
+    }
+    
+    @media (max-width: 991px) {
+        .vertical-nav {
+            width: 230px;
+        }
+        
+        .main-content {
+            margin-left: 230px;
+        }
+    }
+    
+    @media (max-width: 767px) {
+        .dashboard-container {
+            flex-direction: column;
+        }
+        
+        .vertical-nav {
+            width: 100%;
+            height: auto;
+            position: relative;
+            padding: 15px 0;
+        }
+        
+        .logo-container {
+            padding: 5px 20px 15px;
+        }
+        
+        .user-info {
+            padding: 0 20px 10px;
+            margin-bottom: 10px;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-links li {
+            margin: 0 5px 5px 0;
+        }
+        
+        .nav-links li a {
+            padding: 8px 15px;
+        }
+        
+        .nav-footer {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .switch-role-btn, 
+        .logout-btn {
+            width: auto;
+            flex: 1;
+        }
+        
+        .main-content {
+            margin-left: 0;
+            padding: 20px;
+        }
+        
+        .widgets-container {
+            grid-gap: 15px;
+        }
+        
+        .widget-large,
+        .widget-medium,
+        .widget-small {
+            grid-column: span 4;
+        }
+    }
+</style>
+{% endblock %}

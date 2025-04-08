@@ -1,0 +1,91 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}My Contributions - Crewd{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <h1>My Contributions</h1>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Active Projects</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for membership in active_memberships %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3><a href="{% url 'projects:view_project' membership.project.id %}">{{ membership.project.title }}</a></h3>
+                        <p>{{ membership.project.description|truncatechars:150 }}</p>
+                        <p><strong>Team Lead:</strong> {{ membership.project.creator.username }}</p>
+                        <p><strong>Joined:</strong> {{ membership.joined_at|date:"M d, Y" }}</p>
+                        <p><strong>Role:</strong> {{ membership.role|title }}</p>
+                        <div>
+                            <span class="status-label status-active">Active</span>
+                        </div>
+                        <div class="list-item-actions">
+                            <a href="{% url 'projects:view_project' membership.project.id %}" class="btn">View Project</a>
+                            <a href="{% url 'projects:view_group' membership.project.group.id %}" class="btn btn-outline">Group Chat</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>You are not actively contributing to any projects.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Completed Projects</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for membership in completed_memberships %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3><a href="{% url 'projects:view_project' membership.project.id %}">{{ membership.project.title }}</a></h3>
+                        <p><strong>Team Lead:</strong> {{ membership.project.creator.username }}</p>
+                        <p><strong>Joined:</strong> {{ membership.joined_at|date:"M d, Y" }}</p>
+                        <p><strong>Role:</strong> {{ membership.role|title }}</p>
+                        <div>
+                            <span class="status-label status-completed">Completed</span>
+                        </div>
+                        <div class="list-item-actions">
+                            <a href="{% url 'projects:view_project' membership.project.id %}" class="btn btn-outline">View Project</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>You haven't completed any projects yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Pending Applications</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for application in pending_applications %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3><a href="{% url 'projects:view_project' application.project.id %}">{{ application.project.title }}</a></h3>
+                        <p><strong>Team Lead:</strong> {{ application.project.creator.username }}</p>
+                        <p><strong>Applied:</strong> {{ application.created_at|date:"M d, Y" }}</p>
+                        <div>
+                            <span class="status-label status-pending">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>You don't have any pending applications.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

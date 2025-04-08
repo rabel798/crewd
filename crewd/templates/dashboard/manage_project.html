@@ -1,0 +1,267 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Manage {{ project.title }} - Crewd{% endblock %}
+
+{% block dashboard_content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1>Manage Project: {{ project.title }}</h1>
+        <p>Created: {{ project.created_at|date:"M d, Y" }}</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{% url 'projects:find_contributors' project.id %}" class="btn">Find Contributors</a>
+        <a href="{% url 'projects:view_group' project.group.id %}" class="btn btn-outline">Team Chat</a>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Project Details</h2>
+        <button id="edit-project-btn" class="btn btn-outline">Edit</button>
+    </div>
+    <div class="dashboard-card-body">
+        <div id="project-details-view">
+            <p><strong>Description:</strong> {{ project.description }}</p>
+            <p><strong>Team Size:</strong> {{ project.team_size }} | <strong>Current:</strong> {{ project.members.count }}</p>
+            <p><strong>Duration:</strong> {{ project.duration }}</p>
+            <p><strong>Status:</strong> <span class="status-label status-{{ project.status }}">{{ project.status|title }}</span></p>
+            <p><strong>Required Skills:</strong></p>
+            <div class="tech-stack">
+                {% for skill in project.get_required_skills_list %}
+                    <span class="tech-badge">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div id="project-details-edit" style="display: none;">
+            <form method="post" action="{% url 'projects:manage_project' project.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                
+                <div class="form-group">
+                    <label for="title">Project Title</label>
+                    <input type="text" id="title" name="title" class="form-control" value="{{ project.title }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="5" required>{{ project.description }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="required_skills">Required Skills</label>
+                    <div class="skill-selection">
+                        {% for skill in tech_choices %}
+                            <div class="skill-checkbox">
+                                <input type="checkbox" id="skill-{{ forloop.counter }}" name="required_skills" value="{{ skill }}" {% if skill in project.get_required_skills_list %}checked{% endif %}>
+                                <label for="skill-{{ forloop.counter }}">{{ skill }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="team_size">Team Size</label>
+                    <input type="number" id="team_size" name="team_size" class="form-control" min="1" value="{{ project.team_size }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="duration">Project Duration</label>
+                    <input type="text" id="duration" name="duration" class="form-control" value="{{ project.duration }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="active" {% if project.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if project.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="button" id="cancel-edit-btn" class="btn btn-outline">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Team Members</h2>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="member-list">
+            <div class="member-item">
+                <div class="user-avatar">
+                    {% if project.creator.profile_picture %}
+                    <img src="{{ project.creator.profile_picture.url }}" alt="{{ project.creator.username }}">
+                    {% else %}
+                    <img src="/static/img/default-avatar.png" alt="{{ project.creator.username }}">
+                    {% endif %}
+                </div>
+                <div class="member-info">
+                    <h3><a href="{% url 'projects:view_profile' project.creator.id %}">{{ project.creator.username }}</a></h3>
+                    <p><span class="badge">Team Lead</span></p>
+                </div>
+            </div>
+            
+            {% for membership in team_members %}
+                <div class="member-item">
+                    <div class="user-avatar">
+                        {% if membership.user.profile_picture %}
+                        <img src="{{ membership.user.profile_picture.url }}" alt="{{ membership.user.username }}">
+                        {% else %}
+                        <img src="/static/img/default-avatar.png" alt="{{ membership.user.username }}">
+                        {% endif %}
+                    </div>
+                    <div class="member-info">
+                        <h3><a href="{% url 'projects:view_profile' membership.user.id %}">{{ membership.user.username }}</a></h3>
+                        <p><span class="badge">{{ membership.role|title }}</span></p>
+                        <p>Joined: {{ membership.joined_at|date:"M d, Y" }}</p>
+                        
+                        <div class="member-actions">
+                            <form method="post" action="{% url 'projects:manage_project' project.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="remove_member">
+                                <input type="hidden" name="user_id" value="{{ membership.user.id }}">
+                                <button type="submit" class="btn btn-outline btn-sm">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No team members yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Pending Applications</h2>
+        <a href="{% url 'projects:applications_list' %}" class="btn btn-outline">View All</a>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for application in pending_applications %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3><a href="{% url 'projects:view_application' application.id %}">{{ application.applicant.username }}</a></h3>
+                        <p><strong>Applied:</strong> {{ application.created_at|date:"M d, Y" }}</p>
+                        <div class="list-item-actions">
+                            <a href="{% url 'projects:view_application' application.id %}" class="btn">Review</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No pending applications.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">Pending Invitations</h2>
+        <a href="{% url 'projects:sent_invitations' %}" class="btn btn-outline">View All</a>
+    </div>
+    <div class="dashboard-card-body">
+        <div class="list-group">
+            {% for invitation in pending_invitations %}
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <h3>{{ invitation.recipient.username }}</h3>
+                        <p><strong>Sent:</strong> {{ invitation.created_at|date:"M d, Y" }}</p>
+                        <div class="list-item-actions">
+                            <form method="post" action="{% url 'projects:cancel_invitation' invitation.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">Cancel</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No pending invitations.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editBtn = document.getElementById('edit-project-btn');
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        const detailsView = document.getElementById('project-details-view');
+        const detailsEdit = document.getElementById('project-details-edit');
+        
+        editBtn.addEventListener('click', function() {
+            detailsView.style.display = 'none';
+            detailsEdit.style.display = 'block';
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            detailsView.style.display = 'block';
+            detailsEdit.style.display = 'none';
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    .member-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .member-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+    }
+    
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        margin-right: 15px;
+    }
+    
+    .member-info {
+        flex: 1;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+    
+    .member-actions {
+        margin-top: 10px;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .skill-checkbox {
+        display: inline-block;
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
