@@ -133,7 +133,7 @@ class ApplicantDashboardView(LoginRequiredMixin, TemplateView):
 class ContributorsListView(LoginRequiredMixin, ListView):
     """View for listing all contributors/users"""
     model = User
-    template_name = 'dashboard/contributors_list.html'
+    template_name = 'dashboard/applicant/contributors.html'
     context_object_name = 'contributors'
     paginate_by = 10
     
