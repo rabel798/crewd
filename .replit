@@ -1,4 +1,5 @@
-modules = ["python-3.11", "postgresql-16"]
+modules = ["web", "python-3.11", "nix"]
+run = "python manage.py runserver"
 
 [nix]
 channel = "stable-24_05"
@@ -31,7 +32,7 @@ args = "cd crewd && python manage.py runserver 0.0.0.0:5000"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "python app.py"]
+run = ["sh", "-c", "python manage.py runserver"]
 
 [[ports]]
 localPort = 5000
