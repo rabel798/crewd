@@ -507,6 +507,14 @@
 
                     <li class="sidebar-menu-title">Team Management</li>
                     <li><a href="{% url 'projects:applications_list' %}" class="nav-item">
+                        Applications
+                        {% if pending_applications_count > 0 %}
+                            <span class="badge bg-primary ms-2">{{ pending_applications_count }} new</span>
+                        {% endif %}
+                    </a></li>
+                    <li><a href="{% url 'projects:sent_invitations' %}" class="nav-item">Sent Invitations</a></li>
+                    <li><a href="{% url 'projects:groups_list' %}" class="nav-item">Groups</a></li>
+                    <li><a href="{% url 'projects:applications_list' %}" class="nav-item">
                         Team Requests
                         {% if pending_applications_count > 0 %}
                             <span class="badge bg-primary ms-2">{{ pending_applications_count }} pending</span>
