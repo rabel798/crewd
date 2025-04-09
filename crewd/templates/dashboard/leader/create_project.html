@@ -115,11 +115,11 @@
             fetch('{% url "projects:analyze_tech_stack" %}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 },
-                body: JSON.stringify({
-                    description: description
+                body: new URLSearchParams({
+                    'description': description
                 })
             })
             .then(response => response.json())
