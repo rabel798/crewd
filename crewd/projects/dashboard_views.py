@@ -453,7 +453,10 @@ class MyProjectsView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
-        return Project.objects.filter(creator=self.request.user).order_by('-created_at')
+        return Project.objects.filter(
+            creator=self.request.user,
+            creator__role='leader'
+        ).order_by('-created_at')
 
 
 class CreateProjectView(LoginRequiredMixin, CreateView):

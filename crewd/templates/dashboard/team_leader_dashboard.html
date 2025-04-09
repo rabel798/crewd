@@ -30,7 +30,7 @@
 <li class="sidebar-menu-title">Team Management</li>
 <li>
     <a href="{% url 'projects:applications_list' %}">
-        <i class="fas fa-user-plus"></i> Team Requests
+        <i class="fas fa-user-plus"></i> Applications
         {% if pending_applications_count > 0 %}
         <span class="badge bg-danger ms-2">{{ pending_applications_count }}</span>
         {% endif %}
@@ -38,7 +38,7 @@
 </li>
 <li>
     <a href="{% url 'projects:sent_invitations' %}">
-        <i class="fas fa-paper-plane"></i> Sent Invitations
+        <i class="fas fa-paper-plane"></i> Invitations
     </a>
 </li>
 <li>
