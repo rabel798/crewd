@@ -550,6 +550,18 @@ class ManageProjectView(LoginRequiredMixin, DetailView):
                 project.status = status
                 project.save()
                 messages.success(request, f"Project status updated to {status}.")
+        elif action == 'update_project':
+            # Update project details
+            team_size = request.POST.get('team_size')
+            duration = request.POST.get('duration')
+            required_skills = request.POST.getlist('required_skills')
+            
+            project.team_size = int(team_size)
+            project.duration = duration
+            project.required_skills = ','.join(required_skills)
+            project.save()
+            
+            messages.success(request, "Project details updated successfully!")
         
         return redirect('projects:manage_project', project_id=project_id)
 
