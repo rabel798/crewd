@@ -20,6 +20,10 @@ urlpatterns = [
     path('dashboard/applicant/', dashboard_views.ApplicantDashboardView.as_view(), name='dashboard_applicant'),
     path('dashboard/contributors/', dashboard_views.ContributorsListView.as_view(), name='contributors_list'),
     path('dashboard/projects/list/', dashboard_views.ProjectsListView.as_view(), name='projects_list'),
+
+    path('api/recommended-contributors/', dashboard_views.RecommendedContributorsView.as_view(), name='recommended_contributors'),
+    path('api/invite-contributor/<int:user_id>/', dashboard_views.InviteContributorAPIView.as_view(), name='invite_contributor_api'),
+
     path('dashboard/invitations/', dashboard_views.InvitationsListView.as_view(), name='invitations_list'),
     path('dashboard/invitations/<int:invitation_id>/update/', dashboard_views.UpdateInvitationView.as_view(), name='update_invitation'),
     path('dashboard/contributions/', dashboard_views.MyContributionsView.as_view(), name='my_contributions'),

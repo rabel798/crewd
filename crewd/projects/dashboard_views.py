@@ -844,3 +844,57 @@ class AnalyzeTechStackView(LoginRequiredMixin, View):
             
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+class RecommendedContributorsView(LoginRequiredMixin, View):
+    """API view for getting recommended contributors based on tech stack"""
+    def get(self, request):
+        skills = request.GET.get('skills', '').split(',')
+        skills = [s.strip() for s in skills if s.strip()]
+        
+        # Get users with matching tech stack
+        users = User.objects.filter(role='applicant').exclude(id=request.user.id)
+        
+        # Calculate match scores
+        recommended = []
+        for user in users:
+            if user.tech_stack:
+                user_skills = user.get_tech_stack_list()
+                match_score = sum(1 for skill in skills if skill in user_skills)
+                match_percent = int((match_score / len(skills)) * 100) if skills else 0
+                
+                if match_percent > 0:  # Only include users with some match
+                    recommended.append({
+                        'id': user.id,
+                        'username': user.username,
+                        'tech_stack': user.tech_stack,
+                        'match_score': match_percent
+                    })
+        
+        # Sort by match score
+        recommended.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        return JsonResponse(recommended[:5], safe=False)  # Return top 5 matches
+
+class InviteContributorAPIView(LoginRequiredMixin, View):
+    """API view for inviting a contributor"""
+    def post(self, request, user_id):
+        if not request.user.role == 'leader':
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+            
+        try:
+            recipient = User.objects.get(id=user_id)
+            project = Project.objects.filter(creator=request.user).first()
+            
+            if not project:
+                return JsonResponse({'error': 'No project found'}, status=404)
+                
+            # Create invitation
+            invitation = Invitation.objects.create(
+                project=project,
+                sender=request.user,
+                recipient=recipient
+            )
+            
+            return JsonResponse({'status': 'success'})
+            
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
