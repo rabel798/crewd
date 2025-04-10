@@ -159,14 +159,11 @@
                                     <p class="mb-1">{{ project.description|truncatechars:100 }}</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="project-tech">
-                                            {% for skill in project.get_required_skills_list|slice:":3" %}
-                                                <span>{{ skill }}</span>
+                                            {% for tag in project.get_tags_list %}
+                                                <span class="badge bg-primary">{{ tag }}</span>
                                             {% endfor %}
-                                            {% if project.get_required_skills_list|length > 3 %}
-                                                <span>+{{ project.get_required_skills_list|length|add:"-3" }}</span>
-                                            {% endif %}
                                         </div>
-                                        <small>Created by: {{ project.creator.username }}</small>
+                                        <small>Led by {{ project.team_leader.get_full_name }}</small>
                                     </div>
                                 </a>
                             {% endfor %}
@@ -205,7 +202,7 @@
                     </a>
                 </div>
                 <div class="col-md-4 text-center">
-                    <img src="/static/img/logo.jpg" alt="Applicant Guide" class="img-fluid rounded-circle" style="max-width: 200px;">
+                    <img src="/static/img/logo.png" alt="Applicant Guide" class="img-fluid rounded-circle" style="max-width: 200px;">
                 </div>
             </div>
         </div>

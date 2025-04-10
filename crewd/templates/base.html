@@ -47,15 +47,16 @@
         .navbar {
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 1rem 2rem;
+            padding: 1.25rem 2.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
         
         .navbar .brand {
-            font-size: 1.5rem;
+            font-size: 1.875rem;
             font-weight: bold;
             text-decoration: none;
             color: white;
@@ -174,8 +175,8 @@
         }
         
         .navbar-logo {
-            height: 35px;
-            margin-right: 10px;
+            height: 55px;
+            margin-right: 12px;
             background: transparent;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
         }
@@ -222,6 +223,84 @@
             opacity: 1;
         }
     }
+
+    .nav-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 10px;
+    }
+
+    .nav-toggle .bar {
+        width: 25px;
+        height: 3px;
+        background-color: var(--primary-color);
+        margin: 5px 0;
+        transition: 0.4s;
+        display: block;
+    }
+
+    .nav-toggle.active .bar:nth-child(1) {
+        transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .nav-toggle.active .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .nav-toggle.active .bar:nth-child(3) {
+        transform: rotate(45deg) translate(-5px, -6px);
+    }
+
+    .vertical-nav {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        width: 300px;
+        height: 100vh;
+        background: white;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        transition: 0.3s;
+        z-index: 999;
+        padding-top: 60px;
+    }
+
+    .vertical-nav.active {
+        right: 0;
+    }
+
+    .vertical-nav .nav-links {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .vertical-nav .nav-links li {
+        margin: 15px 0;
+    }
+
+    .vertical-nav .nav-links a {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+        .navbar .nav-links {
+            display: none;
+        }
+        
+        .nav-toggle {
+            display: block;
+        }
+
+        .vertical-nav .nav-links {
+            display: flex;
+        }
+    }
     </style>
     <!-- Import Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -234,10 +313,18 @@
     <!-- Navigation Bar -->
     <nav class="navbar">
         <a href="{% url 'index' %}" class="brand">
-            <!-- Static logo in navbar -->
-            <img src="/static/img/logo.jpg" alt="Crewd Logo" class="navbar-logo">
+            <img src="/static/img/logo.png" alt="Crewd Logo" class="navbar-logo">
             Crewd
         </a>
+        <button class="nav-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+    </nav>
+
+    <!-- Vertical Navigation -->
+    <div class="vertical-nav">
         <ul class="nav-links">
             {% if user.is_authenticated %}
                 <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
@@ -250,7 +337,7 @@
                 {% endif %}
             {% endif %}
         </ul>
-    </nav>
+    </div>
     
     <!-- Main Content -->
     <div class="container">
@@ -380,6 +467,25 @@
                     }
                 },
                 "retina_detect": true
+            });
+
+            // Navigation toggle functionality
+            const navToggle = document.querySelector('.nav-toggle');
+            const verticalNav = document.querySelector('.vertical-nav');
+            
+            navToggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                verticalNav.classList.toggle('active');
+            });
+
+            // Close navigation when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.nav-toggle') && 
+                    !event.target.closest('.vertical-nav') && 
+                    verticalNav.classList.contains('active')) {
+                    navToggle.classList.remove('active');
+                    verticalNav.classList.remove('active');
+                }
             });
         });
     </script>

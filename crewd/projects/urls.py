@@ -7,7 +7,7 @@ app_name = 'projects'
 urlpatterns = [
     # Regular project views
     path('', views.ProjectListView.as_view(), name='project_list'),
-    path('create/', views.CreateProjectView.as_view(), name='create_project'),
+    path('create/', views.create_project, name='create_project'),
     path('<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
     path('<int:pk>/apply/', views.ApplyToProjectView.as_view(), name='apply_project'),
     

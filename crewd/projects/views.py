@@ -4,9 +4,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.views import View
+from django.contrib.auth.decorators import login_required
 
 from .models import Project, Application
-from accounts.models import TECH_CHOICES
+from accounts.models import TECH_CHOICES, UserProfile
+from .forms import ProjectForm
+from .services import ProjectTaggingService
 
 class ProjectListView(ListView):
     """View for listing all projects"""
@@ -41,34 +44,56 @@ class ProjectDetailView(DetailView):
                 applicant=self.request.user
             ).exists()
             
-            # Check if the user is the project creator
-            context['is_creator'] = (project.creator == self.request.user)
+            # Check if the user is the project leader
+            context['is_creator'] = (project.team_leader == self.request.user)
             
             # Check if the user is a member
             context['is_member'] = project.members.filter(id=self.request.user.id).exists()
         
-        # Get team members (excluding the creator)
-        context['team_members'] = project.members.exclude(id=project.creator.id)
+        # Get team members (excluding the leader if one exists)
+        if project.team_leader:
+            context['team_members'] = project.members.exclude(id=project.team_leader.id)
+        else:
+            context['team_members'] = project.members.all()
         
         return context
 
 
-class CreateProjectView(LoginRequiredMixin, CreateView):
-    """View for creating a new project"""
-    model = Project
-    template_name = 'projects/create_project.html'
-    fields = ['title', 'description', 'required_skills', 'team_size', 'duration']
-    success_url = reverse_lazy('projects:project_list')
+@login_required
+def create_project(request):
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.team_leader = request.user
+            
+            # Generate tags using Groq API
+            tagging_service = ProjectTaggingService()
+            tags = tagging_service.generate_tags(project.description)
+            project.set_tags_list(tags)
+            project.save()
+
+            # Get profile recommendations
+            applicant_profiles = UserProfile.objects.filter(role='applicant')
+            profile_data = [{
+                'user': profile.user,
+                'skills': profile.skills,  # Now using the text field directly
+                'experience': profile.experience
+            } for profile in applicant_profiles]
+            
+            recommendations = tagging_service.get_profile_recommendations(
+                tags,
+                profile_data
+            )
+
+            return render(request, 'projects/project_created.html', {
+                'project': project,
+                'recommendations': recommendations[:5]  # Top 5 recommendations
+            })
+    else:
+        form = ProjectForm()
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['tech_choices'] = TECH_CHOICES
-        return context
-    
-    def form_valid(self, form):
-        form.instance.creator = self.request.user
-        messages.success(self.request, "Project created successfully!")
-        return super().form_valid(form)
+    return render(request, 'projects/create_project.html', {'form': form})
 
 
 class ApplyToProjectView(LoginRequiredMixin, View):
@@ -77,8 +102,8 @@ class ApplyToProjectView(LoginRequiredMixin, View):
     def get(self, request, pk):
         project = Project.objects.get(pk=pk)
         
-        # Check if the user is the creator
-        if project.creator == request.user:
+        # Check if the user is the leader
+        if project.team_leader == request.user:
             messages.error(request, "You cannot apply to your own project.")
             return redirect('projects:project_detail', pk=pk)
         

@@ -1,6 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField
+
+User = get_user_model()
 
 # Tech stack choices
 TECH_CHOICES = [
@@ -12,31 +16,56 @@ TECH_CHOICES = [
 ]
 
 class Project(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=200)
     description = models.TextField()
     required_skills = models.TextField(null=True, blank=True)
     team_size = models.IntegerField()
     duration = models.CharField(max_length=50)
+    team_leader = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='led_projects',
+        null=True,  # Allow null for existing records
+        default=None  # Default to None for existing records
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    tags = models.TextField(
+        blank=True,
+        help_text="Comma-separated list of technology stack tags"
+    )
     status = models.CharField(
         max_length=20,
         choices=[
-            ('active', 'Active'),
+            ('open', 'Open'),
+            ('in_progress', 'In Progress'),
             ('completed', 'Completed'),
-            ('cancelled', 'Cancelled'),
+            ('cancelled', 'Cancelled')
         ],
-        default='active'
+        default='open'
     )
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_projects')
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='ProjectMembership', related_name='member_projects')
-    created_at = models.DateTimeField(default=timezone.now)
 
     def get_required_skills_list(self):
-        if not self.required_skills:
-            return []
-        return [skill.strip() for skill in self.required_skills.split(',')]
+        if self.required_skills:
+            return [skill.strip() for skill in self.required_skills.split(',')]
+        return []
+
+    def get_tags_list(self):
+        """Convert comma-separated tags string to list"""
+        if self.tags:
+            return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+        return []
+
+    def set_tags_list(self, tags_list):
+        """Convert tags list to comma-separated string"""
+        self.tags = ', '.join(tags_list)
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        ordering = ['-created_at']
 
 class ProjectMembership(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)

@@ -4,11 +4,6 @@
 
 {% block content %}
 <div class="auth-wrapper">
-    <!-- Static logo -->
-    <div class="logo-container">
-        <img src="/static/img/logo.jpg" alt="Crewd Logo" class="floating-logo">
-    </div>
-
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-tabs">
@@ -151,30 +146,14 @@
         background: linear-gradient(135deg, rgba(75, 74, 207, 0.1), rgba(64, 224, 208, 0.1));
     }
 
-    .logo-container {
-        margin-bottom: 3rem;
-    }
-
-    .floating-logo {
-        width: 120px;
-        height: auto;
-        animation: float 3s ease-in-out infinite;
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-    }
-
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-    }
-
     .auth-container {
         width: 100%;
-        max-width: 500px;
-        perspective: 1000px;
+        max-width: 100%;
+        padding: 0 2rem;
     }
 
     .auth-card {
+        width: 100%;
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
         border-radius: 20px;

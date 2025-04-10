@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Projects List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card glass-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>All Projects</h5>
+                    {% if user.role == 'team_leader' %}
+                    <a href="{% url 'projects:create_project' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Project
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if projects %}
+                        <div class="list-group">
+                            {% for project in projects %}
+                                <a href="{% url 'projects:project_detail' project.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ project.title }}</h5>
+                                        <small>{{ project.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ project.description|truncatechars:200 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="project-tech">
+                                            {% for tag in project.get_tags_list %}
+                                                <span class="badge bg-primary">{{ tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="project-meta">
+                                            <span class="badge bg-{{ project.status|lower }}">{{ project.status }}</span>
+                                            <small class="ms-2">Team Size: {{ project.team_size }}</small>
+                                            <small class="ms-2">Duration: {{ project.duration }}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% if is_paginated %}
+                            <nav class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    {% for num in page_obj.paginator.page_range %}
+                                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endfor %}
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h5>No Projects Found</h5>
+                            <p class="text-muted">There are currently no projects available.</p>
+                            {% if user.role == 'team_leader' %}
+                                <a href="{% url 'projects:create_project' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Create Your First Project
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.project-tech .badge {
+    margin-right: 0.5rem;
+}
+
+.badge.bg-open { background-color: #28a745; }
+.badge.bg-in_progress { background-color: #007bff; }
+.badge.bg-completed { background-color: #6c757d; }
+.badge.bg-cancelled { background-color: #dc3545; }
+
+.list-group-item {
+    transition: transform 0.2s;
+}
+
+.list-group-item:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %} 

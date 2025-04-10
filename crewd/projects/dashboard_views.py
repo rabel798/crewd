@@ -124,7 +124,12 @@ class ApplicantDashboardView(LoginRequiredMixin, TemplateView):
         
         # Recent projects (limit to 5)
         context['recent_projects'] = Project.objects.filter(
-            status='active'
+            status='open'
+        ).order_by('-created_at')[:5]
+        
+        # Get user's applications
+        context['applications'] = Application.objects.filter(
+            applicant=self.request.user
         ).order_by('-created_at')[:5]
         
         return context
@@ -185,7 +190,7 @@ class ProjectsListView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
-        queryset = Project.objects.filter(status='active')
+        queryset = Project.objects.all()
         
         # Apply search filters if provided
         search_query = self.request.GET.get('search', '')
@@ -193,28 +198,14 @@ class ProjectsListView(LoginRequiredMixin, ListView):
         
         if search_query:
             queryset = queryset.filter(
-                Q(title__icontains=search_query) | 
+                Q(title__icontains=search_query) |
                 Q(description__icontains=search_query)
             )
         
         if tech_filter:
-            queryset = queryset.filter(required_skills__icontains=tech_filter)
+            queryset = queryset.filter(tags__icontains=tech_filter)
         
-        # Get user's tech stack for matching
-        user = self.request.user
-        if user.tech_stack:
-            user_tech_stack = user.get_tech_stack_list()
-            
-            # Annotate projects with a match score (number of matching tech stack items)
-            for project in queryset:
-                project_skills = project.get_required_skills_list()
-                match_score = sum(1 for skill in project_skills if skill in user_tech_stack)
-                project.match_score = match_score
-            
-            # Sort by match score (higher first)
-            queryset = sorted(queryset, key=lambda p: p.match_score, reverse=True)
-        
-        return queryset
+        return queryset.order_by('-created_at')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -414,26 +405,10 @@ class TeamLeaderDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
-        # Projects created by user
-        context['projects_count'] = Project.objects.filter(creator=user).count()
-        
-        # Pending applications count
-        context['pending_applications_count'] = Application.objects.filter(
-            project__creator=user, 
-            status='pending'
-        ).count()
-        
-        # Active team members count
-        context['team_members_count'] = ProjectMembership.objects.filter(
-            project__creator=user, 
-            status='active'
-        ).exclude(user=user).count()
-        
-        # Recent applications (limit to 5)
-        context['recent_applications'] = Application.objects.filter(
-            project__creator=user, 
-            status='pending'
-        ).select_related('project', 'applicant').order_by('-created_at')[:5]
+        # Get projects led by the user
+        context['my_projects'] = Project.objects.filter(
+            team_leader=self.request.user
+        ).order_by('-created_at')
         
         return context
 
@@ -454,8 +429,7 @@ class MyProjectsView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         return Project.objects.filter(
-            creator=self.request.user,
-            creator__role='leader'
+            team_leader=self.request.user
         ).order_by('-created_at')
 
 
@@ -814,36 +788,42 @@ class UpdateApplicationView(LoginRequiredMixin, View):
 
 
 class AnalyzeTechStackView(LoginRequiredMixin, View):
-    """View for analyzing project description with Grok API to suggest tech stack"""
-    def post(self, request):
-        project_id = request.POST.get('project_id')
-        description = request.POST.get('description')
+    """View to suggest tech stack from predefined choices based on project description."""
+    
+    def post(self, request, project_id):
+        # Get the project and verify the user is the team leader
+        project = get_object_or_404(Project, id=project_id)
+        if project.team_leader != request.user:
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
         
-        if not description:
-            return JsonResponse({'error': 'Description is required'}, status=400)
+        # Get project description in lowercase for case-insensitive matching
+        description = project.description.lower()
         
-        try:
-            # Use our Grok API integration
-            from .grok_api import analyze_tech_stack
-            tech_stack = analyze_tech_stack(description)
-            
-            # Save analysis if project_id is provided
-            if project_id:
-                project = get_object_or_404(Project, id=project_id, creator=request.user)
-                TechStackAnalysis.objects.create(
-                    project=project,
-                    description=description,
-                    analysis_result=tech_stack
-                )
-                
-                # Update project required_skills
-                project.required_skills = tech_stack
-                project.save()
-            
-            return JsonResponse({'tech_stack': tech_stack})
-            
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        # Find tech stack mentions in the description
+        suggested_tech_stack = []
+        for tech in TECH_CHOICES:
+            if tech.lower() in description:
+                suggested_tech_stack.append(tech)
+        
+        if not suggested_tech_stack:
+            return JsonResponse({'message': 'No tech stack suggestions found'}, status=200)
+        
+        # Save the analysis results
+        analysis = TechStackAnalysis.objects.create(
+            project=project,
+            description=project.description,
+            analysis_result={'suggested_tech_stack': suggested_tech_stack}
+        )
+        
+        # Update project's required skills
+        project.required_skills = ', '.join(suggested_tech_stack)
+        project.save()
+        
+        return JsonResponse({
+            'tech_stack': suggested_tech_stack,
+            'message': 'Tech stack analysis completed successfully'
+        })
+
 class RecommendedContributorsView(LoginRequiredMixin, View):
     """API view for getting recommended contributors based on tech stack"""
     def get(self, request):
